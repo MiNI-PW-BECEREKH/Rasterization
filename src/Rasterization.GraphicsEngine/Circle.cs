@@ -14,15 +14,24 @@ namespace Rasterization.Engine
         public Color Color { get ; set ; }
         public List<Point> StretchablePoints { get ; set ; }
         public List<Point> Points { get; set; } = new();
+        public FilledCircle Brush { get ; set ; }
+
+        public Circle(Point center, Point radiusIndicator, Color color, int bs)
+        {
+            Center = center;
+            Radius = (int)Math.Sqrt(Math.Pow(center.X - radiusIndicator.X, 2) + Math.Pow(center.Y - radiusIndicator.Y, 2));
+            Color = color;
+            Brush = new FilledCircle(new Point(0, 0), new Point(bs, bs), Color);
+            CalculateBrush();
+        }
 
         public Circle(Point center, Point radiusIndicator, Color color)
         {
             Center = center;
             Radius = (int)Math.Sqrt(Math.Pow(center.X - radiusIndicator.X, 2) + Math.Pow(center.Y - radiusIndicator.Y, 2));
             Color = color;
-            
         }
-        public void CalculatePoints()
+        public virtual void CalculatePoints()
         {
             Points.Clear();
             int x = Radius, y = 0;
@@ -110,6 +119,11 @@ namespace Rasterization.Engine
             Center = new Point(Center.X + dx, Center.Y + dy);
             CalculatePoints();
             engine.Move(this);
+        }
+
+        public void CalculateBrush()
+        {
+            Brush.CalculatePoints();
         }
     }
 }

@@ -14,12 +14,16 @@ namespace Rasterization.Engine
         public List<Point> Points { get; set; } = new();
         public Color Color { get ; set; }
         public List<Point> StretchablePoints { get; set; } = new();
+        public FilledCircle Brush { get ; set ; }
 
-        public Line(Point sp, Point ep,Color color)
+        public Line(Point sp, Point ep,Color color, int bs)
         {
             StartingPoint = sp;
             EndingPoint = ep;
             Color = color;
+            Brush = new FilledCircle(new Point(0,0),new Point(bs,bs),Color);
+
+            CalculateBrush();
 
             StretchablePoints.Add(sp);
             StretchablePoints.Add(ep);
@@ -111,6 +115,7 @@ namespace Rasterization.Engine
 
         }
 
+
         public void Draw(IGraphicsEngine engine)
         {
             engine.Draw(this);
@@ -118,7 +123,7 @@ namespace Rasterization.Engine
 
         public bool HitTest(Point p)
         {
-            return Points.Contains(p);
+            return Points.Any(point => Math.Sqrt(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2)) < 10);
         }
 
         public void Erase(IGraphicsEngine engine)
@@ -142,19 +147,24 @@ namespace Rasterization.Engine
 
         public void Move(IGraphicsEngine engine, int dx, int dy, int idx)
         {
-            //int sign = 1;
-            //if (dx < 0 || dy < 0)
-            //    sign = -sign;
-            //var delta =  (int)Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2));
-            //for (int i = 0; i < StretchablePoints.Count; i++)
-            //{
-            //    var p = StretchablePoints[i];
-            //    StretchablePoints.RemoveAt(i);
-            //    StretchablePoints.Add(new Point(p.X + Math.Sign(dx)*dx, p.Y + Math.Sign(dy)*dy));
-            //}
+            int sign = 1;
+            if (dx < 0 || dy < 0)
+                sign = -sign;
+            var delta = (int)Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2));
+            for (int i = 0; i < Points.Count; i++)
+            {
+                var p = Points[i];
+                Points.RemoveAt(i);
+                Points.Insert(i,new Point(p.X +  dx, p.Y +  dy));
+            }
             //CalculatePoints();
-            //engine.Move(this);
-            throw new NotImplementedException();
+            engine.Move(this);
+        }
+
+        public void CalculateBrush()
+        {
+            Brush.CalculatePoints();
+            //Points.AddRange(Brush.Points);
         }
     }
 }

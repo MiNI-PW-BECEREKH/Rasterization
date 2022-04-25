@@ -50,9 +50,14 @@
 
                     <ToggleButton Height="30" Name="PolygonDrawingButton" Click="ToolSetClick" Unchecked="ToolSetUnClick" Content="POLYGON"/>
 
-                    <ToggleButton Height="30" Name="GrabToolButton" Click="ToolSetClick" Content="GRAB"/>
+                    <xctk:IntegerUpDown Height="30" Value="1" Minimum="1" Increment="1" Name="BrushInput" ValueChanged="BrushInput_ValueChanged"/>
 
+                    <ToggleButton Height="30" Name="GrabToolButton" Click="ToolSetClick" Content="GRAB"/>
+                    
                     <xctk:ColorPicker  Height="30" SelectedColor="Black" Name="ColorPicker" SelectedColorChanged="ColorPicker_SelectedColorChanged" />
+                    
+                    
+                 
                     <Button Height="30" Name="DeleteButton" Click="DeleteButton_Click">DELETE</Button>
 
                 </StackPanel>

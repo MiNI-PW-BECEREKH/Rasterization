@@ -7,6 +7,7 @@ namespace Rasterization.Engine
 {
     public class GraphicsEngine : IGraphicsEngine
     {
+        bool lazyMansStackOverflowProtection = false;
         public WriteableBitmap Bitmap { get; set; }
 
         public Color BackGround { get; set; } = Color.FromArgb(240, 240, 240);
@@ -25,6 +26,10 @@ namespace Rasterization.Engine
                foreach(var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, line.Color);
+                    line.Brush.Center = point;
+                    line.Brush.CalculatePoints();
+                    Draw(line.Brush);
+
                 }
             }
             finally
@@ -42,6 +47,9 @@ namespace Rasterization.Engine
                 foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, BackGround);
+                    line.Brush.Center = point;
+                    line.Brush.CalculatePoints();
+                    Erase(line.Brush);
                 }
             }
             finally
@@ -53,9 +61,11 @@ namespace Rasterization.Engine
         void SetPixel(int x, int y, Color color)
         {
             if (y > Bitmap.PixelHeight - 1 || x > Bitmap.PixelWidth - 1)
-                throw new Exception("Position for (x,y) is not in Bitmap");
+                return;
+                //throw new Exception("Position for (x,y) is not in Bitmap");
             if (y < 0 || x < 0)
-                throw new Exception("Position for (x,y) is not in Bitmap");
+                return;
+                //throw new Exception("Position for (x,y) is not in Bitmap");
 
             IntPtr pBackBuffer = Bitmap.BackBuffer;
             int stride = Bitmap.BackBufferStride;
@@ -85,6 +95,9 @@ namespace Rasterization.Engine
                 foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
+                    line.Brush.Center = point;
+                    line.Brush.CalculatePoints();
+                    Transparent(line.Brush);
                 }
             }
             finally
@@ -102,6 +115,9 @@ namespace Rasterization.Engine
                 foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
+                    line.Brush.Center = point;
+                    line.Brush.CalculatePoints();
+                    Stretch(line.Brush);
                 }
             }
             finally
@@ -118,6 +134,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, circle.Color);
+                    circle.Brush.Center = point;
+                    circle.Brush.CalculatePoints();
+                    Draw(circle.Brush);
                 }
             }
             finally
@@ -134,6 +153,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, BackGround);
+                    circle.Brush.Center = point;
+                    circle.Brush.CalculatePoints();
+                    Erase(circle.Brush);
                 }
             }
             finally
@@ -152,6 +174,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
+                    circle.Brush.Center = point;
+                    circle.Brush.CalculatePoints();
+                    Transparent(circle.Brush);
                 }
             }
             finally
@@ -169,6 +194,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
+                    circle.Brush.Center = point;
+                    circle.Brush.CalculatePoints();
+                    Stretch(circle.Brush);
                 }
             }
             finally
@@ -178,6 +206,95 @@ namespace Rasterization.Engine
         }
 
         public void Move(Circle circle)
+        {
+            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in circle.Points)
+                {
+                    SetPixel(point.X, point.Y, GrabbedItemColor);
+                    circle.Brush.Center = point;
+                    circle.Brush.CalculatePoints();
+                    Move(circle.Brush);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+
+        public void Draw(FilledCircle circle)
+        {
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in circle.Points)
+                {
+                    SetPixel(point.X, point.Y, circle.Color);
+
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        public void Erase(FilledCircle circle)
+        {
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in circle.Points)
+                {
+                    SetPixel(point.X, point.Y, BackGround);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        public void Transparent(FilledCircle circle)
+        {
+            Erase(circle);
+            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in circle.Points)
+                {
+                    SetPixel(point.X, point.Y, GrabbedItemColor);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        public void Stretch(FilledCircle circle)
+        {
+            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in circle.Points)
+                {
+                    SetPixel(point.X, point.Y, GrabbedItemColor);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        public void Move(FilledCircle circle)
         {
             GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
             Bitmap.Lock();
@@ -203,6 +320,9 @@ namespace Rasterization.Engine
                 foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
+                    line.Brush.Center = point;
+                    line.Brush.CalculatePoints();
+                    Move(line.Brush);
                 }
             }
             finally
@@ -210,5 +330,6 @@ namespace Rasterization.Engine
                 Bitmap.Unlock();
             }
         }
+
     }
 }

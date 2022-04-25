@@ -40,6 +40,7 @@ namespace Rasterization.UI
             LineDrawingButton.IsChecked = false;
             GrabToolButton.IsChecked = false;
             CircleDrawingButton.IsChecked = false;
+            PolygonDrawingButton.IsChecked = false;
             try
             {
                 var btn = (ToggleButton)sender;
@@ -73,7 +74,7 @@ namespace Rasterization.UI
 
                     if (CachedPoints.Count == 2)
                     {
-                        Line line = new Line(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor());
+                        Line line = new Line(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
                         CachedPoints.Clear();
                         line.CalculatePoints();
                         Drawables.Add(line);
@@ -87,7 +88,7 @@ namespace Rasterization.UI
 
                     if (CachedPoints.Count == 2)
                     {
-                        Circle circle = new Circle(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor());
+                        Circle circle = new Circle(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
                         CachedPoints.Clear();
                         circle.CalculatePoints();
                         Drawables.Add(circle);
@@ -97,13 +98,15 @@ namespace Rasterization.UI
                 }
                 if((bool)PolygonDrawingButton.IsChecked)
                 {
-                    if(CachedPoints.Any(x => (int)Math.Sqrt(Math.Pow(x.X - pointWithInts.X, 2) + Math.Pow(x.Y - pointWithInts.Y, 2)) < 50))
+                    var initialPoint = CachedPoints.FirstOrDefault();
+                    if(((int)Math.Sqrt(Math.Pow(initialPoint.X - pointWithInts.X, 2) + Math.Pow(initialPoint.Y - pointWithInts.Y, 2)) < 50))
                     {
-                        CachedPoints.Add(CachedPoints.First());
-                        Polygon polygon= new Polygon(CachedPoints, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor());
+                        //CachedPoints.Add(CachedPoints.First());
+                        Polygon polygon= new Polygon(CachedPoints, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
                         polygon.CalculatePoints();
                         Drawables.Add(polygon);
                         polygon.Draw(GE);
+                        CachedPoints.Clear();
                     }
                     else
                         CachedPoints.Add(pointWithInts);
@@ -170,7 +173,7 @@ namespace Rasterization.UI
         {
             var p = e.GetPosition(ImageCanvas);
             var pointWithInts = new Point((int)p.X, (int)p.Y);
-            if (SelectedDrawable != null && e.LeftButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(p => Math.Sqrt(Math.Pow(pointWithInts.X - p.X, 2) + Math.Pow(pointWithInts.Y - p.Y, 2)) < 100))
+            if (SelectedDrawable != null && e.LeftButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(point => Math.Sqrt(Math.Pow(pointWithInts.X - point.X, 2) + Math.Pow(pointWithInts.Y - point.Y, 2)) < 150))
             {
                 var min = 35000;
                 int closestPointIdx = 0;
@@ -195,7 +198,7 @@ namespace Rasterization.UI
                 Drawables.Where(x => x != SelectedDrawable).ToList().ForEach(x => x.Draw(GE));
             }
 
-            if (SelectedDrawable != null && e.MiddleButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(p => Math.Sqrt(Math.Pow(pointWithInts.X - p.X, 2) + Math.Pow(pointWithInts.Y - p.Y, 2)) < 100))
+            if (SelectedDrawable != null && e.MiddleButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(p => Math.Sqrt(Math.Pow(pointWithInts.X - p.X, 2) + Math.Pow(pointWithInts.Y - p.Y, 2)) < 50))
             {
                 var min = 35000;
                 int closestPointIdx = 0;
@@ -235,8 +238,20 @@ namespace Rasterization.UI
             if (SelectedDrawable != null)
             {
                 SelectedDrawable.Color = ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor();
+                SelectedDrawable.Brush.Color = ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor();
                 SelectedDrawable.IndicateSelection(GE);
 
+            }
+        }
+
+        private void BrushInput_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if(SelectedDrawable != null)
+            {
+                SelectedDrawable.Erase(GE);
+                SelectedDrawable.Brush.Radius = (int)e.NewValue;
+                SelectedDrawable.CalculateBrush();
+                SelectedDrawable.IndicateSelection(GE);
             }
         }
     }

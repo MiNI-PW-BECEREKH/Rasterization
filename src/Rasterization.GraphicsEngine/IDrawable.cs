@@ -12,6 +12,7 @@ namespace Rasterization.Engine
 
         void Move(IGraphicsEngine engine, int dx, int dy, int idx);
 
+        void CalculateBrush();
 
         void CalculatePoints();
         bool HitTest(Point p);
@@ -19,5 +20,7 @@ namespace Rasterization.Engine
         Color Color { get; set; }
         List<Point> StretchablePoints { get; set; }
         List<Point> Points { get; set; }
+
+        FilledCircle Brush { get; set; }
     }
 }
