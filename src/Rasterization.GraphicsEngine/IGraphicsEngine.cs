@@ -18,5 +18,11 @@ namespace Rasterization.Engine
         void Stretch(Circle circle);
         void Move(Circle circle);
 
+        void Draw(Arc arc);
+
+        void DrawAALine(Line line);
+
+        void DrawAACircle(Circle circle);
+
     }
 }

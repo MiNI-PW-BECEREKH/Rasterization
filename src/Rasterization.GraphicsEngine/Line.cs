@@ -147,17 +147,13 @@ namespace Rasterization.Engine
 
         public void Move(IGraphicsEngine engine, int dx, int dy, int idx)
         {
-            int sign = 1;
-            if (dx < 0 || dy < 0)
-                sign = -sign;
-            var delta = (int)Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2));
-            for (int i = 0; i < Points.Count; i++)
-            {
-                var p = Points[i];
-                Points.RemoveAt(i);
-                Points.Insert(i,new Point(p.X +  dx, p.Y +  dy));
-            }
-            //CalculatePoints();
+            var p = StretchablePoints[0];
+            StretchablePoints.RemoveAt(0);
+            StretchablePoints.Insert(0,new Point(p.X + dx, p.Y +  dy));
+            p = StretchablePoints[1];
+            StretchablePoints.RemoveAt(1);
+            StretchablePoints.Insert(1, new Point(p.X + dx, p.Y + dy));
+            CalculatePoints();
             engine.Move(this);
         }
 
@@ -165,6 +161,25 @@ namespace Rasterization.Engine
         {
             Brush.CalculatePoints();
             //Points.AddRange(Brush.Points);
+        }
+
+        public void DrawAA(IGraphicsEngine engine)
+        {
+            engine.DrawAALine(this);
+        }
+
+        public void UpScale(IGraphicsEngine engine)
+        {
+            Erase(engine);
+            Brush.Radius = 2 * Brush.Radius;
+            StretchablePoints[0] = new Point(StretchablePoints[0].X * 2, StretchablePoints[0].Y * 2);
+            StretchablePoints[1] = new Point(StretchablePoints[1].X * 2, StretchablePoints[1].Y * 2);
+            CalculatePoints();
+            Draw(engine);
+
+
+
+
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Rasterization.Engine
             Bitmap.Lock();
             try
             {
-               foreach(var point in line.Points)
+                foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, line.Color);
                     line.Brush.Center = point;
@@ -62,10 +62,10 @@ namespace Rasterization.Engine
         {
             if (y > Bitmap.PixelHeight - 1 || x > Bitmap.PixelWidth - 1)
                 return;
-                //throw new Exception("Position for (x,y) is not in Bitmap");
+            //throw new Exception("Position for (x,y) is not in Bitmap");
             if (y < 0 || x < 0)
                 return;
-                //throw new Exception("Position for (x,y) is not in Bitmap");
+            //throw new Exception("Position for (x,y) is not in Bitmap");
 
             IntPtr pBackBuffer = Bitmap.BackBuffer;
             int stride = Bitmap.BackBufferStride;
@@ -88,7 +88,7 @@ namespace Rasterization.Engine
         public void Transparent(Line line)
         {
             Erase(line);
-            GrabbedItemColor = Color.FromArgb(128,line.Color.R,line.Color.G,line.Color.B);
+            GrabbedItemColor = Color.FromArgb(128, line.Color.R, line.Color.G, line.Color.B);
             Bitmap.Lock();
             try
             {
@@ -321,8 +321,213 @@ namespace Rasterization.Engine
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
                     line.Brush.Center = point;
+                    //TODO: fix brush
                     line.Brush.CalculatePoints();
                     Move(line.Brush);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        public void Draw(Arc arc)
+        {
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in arc.Points)
+                {
+                    SetPixel(point.X, point.Y, arc.Color);
+
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        int iPartOfNumber(float x)
+        {
+            return (int)x;
+        }
+
+        //rounds off a number 
+        int roundNumber(float x)
+        {
+            return iPartOfNumber(x + 0.5f);
+        }
+
+        //returns fractional part of a number 
+        float fPartOfNumber(float x)
+        {
+            if (x > 0) return x - iPartOfNumber(x);
+            else return x - (iPartOfNumber(x) + 1);
+
+        }
+
+        //returns 1 - fractional part of number 
+        float rfPartOfNumber(float x)
+        {
+            return 1 - fPartOfNumber(x);
+        }
+
+        Color C1(Color B, Color L, float y)
+        {
+            var r = L.R * (1 - fPartOfNumber(y)) + B.R * fPartOfNumber(y);
+            var g = L.G * (1 - fPartOfNumber(y)) + B.G * fPartOfNumber(y);
+            var b = L.B * (1 - fPartOfNumber(y)) + B.B * fPartOfNumber(y);
+
+            return Color.FromArgb(255, (int)r, (int)g, (int)b);
+        }
+
+        Color C2(Color B, Color L, float y)
+        {
+            var r = B.R * (1 - fPartOfNumber(y)) + L.R * fPartOfNumber(y);
+            var g = B.G * (1 - fPartOfNumber(y)) + L.G * fPartOfNumber(y);
+            var b = B.B * (1 - fPartOfNumber(y)) + L.B * fPartOfNumber(y);
+
+            return Color.FromArgb(255, (int)r, (int)g, (int)b);
+        }
+
+        Color CircleC2(Color B, Color L, float T)
+        {
+            var r = L.R * (1 - T) + B.R * T;
+            var g = L.G * (1 - T) + B.G * T;
+            var b = L.B * (1 - T) + B.B * T;
+
+            return Color.FromArgb(255, (int)r, (int)g, (int)b);
+        }
+
+        Color CircleC1(Color B, Color L, float T)
+        {
+            var r = B.R * (1 - T) + L.R * T;
+            var g = B.G * (1 - T) + L.G * T;
+            var b = B.B * (1 - T) + L.B * T;
+
+            return Color.FromArgb(255, (int)r, (int)g, (int)b);
+        }
+
+        public void DrawAALine(Line line)
+        {
+            try
+            {
+                Bitmap.Lock();
+
+                int x1 = line.StretchablePoints[0].X;
+                int y1 = line.StretchablePoints[0].Y;
+                int x2 = line.StretchablePoints[1].X;
+                int y2 = line.StretchablePoints[1].Y;
+
+                bool steep = Math.Abs(y2 - y1) > Math.Abs(x2 - x1);
+
+                if (steep)
+                {
+                    (x1, y1) = (y1, x1);
+                    (x2, y2) = (y2, x2);
+                }
+
+                if (x1 > x2)
+                {
+                    (x1, x2) = (x2, x1);
+                    (y1, y2) = (y2, y1);
+                }
+
+                float dx = x2 - x1;
+                float dy = y2 - y1;
+
+                float gradient = dy / dx;
+
+                if (dx == 0) gradient = 1;
+
+                int xPixel1 = x1;
+                int xPixel2 = x2;
+
+                float intersectY = y1;
+
+                Color L = line.Color;
+                Color B = BackGround;
+
+                if (steep)
+                {
+                    for (int x = xPixel1; x <= xPixel2; x++)
+                    {
+
+
+                        SetPixel(iPartOfNumber(intersectY), x, C2(B, L, intersectY));
+                        SetPixel(iPartOfNumber(intersectY) - 1, x, C1(B, L, intersectY));
+                        intersectY += gradient;
+                    }
+                }
+                else
+                {
+                    for (int x = xPixel1; x <= xPixel2; x++)
+                    {
+                        SetPixel(x, iPartOfNumber(intersectY), C2(B, L, intersectY));
+                        SetPixel(x, iPartOfNumber(intersectY) - 1, C1(B, L, intersectY));
+                        intersectY += gradient;
+                    }
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+
+
+        }
+
+        public void DrawAACircle(Circle circle)
+        {
+            try
+            {
+                Bitmap.Lock();
+                Color L = circle.Color;
+                Color B = BackGround;
+                var Center = circle.Center;
+                int r = circle.Radius;
+                int x = circle.Radius;
+                int y = 0;
+                SetPixel(x, y, L);
+
+                while (x < y)
+                {
+                    ++y;
+                    x = (int)Math.Ceiling((decimal)(r * r - y * y));
+
+                    float T = (float)(Math.Ceiling(Math.Sqrt(r * r - y * y)) - Math.Sqrt(r * r - y * y));
+
+                    var c2 = CircleC2(B, L, T);
+                    var c1 = CircleC1(B, L, T);
+
+                    SetPixel(x, y, c2);
+                    SetPixel(x - 1, y, c1);
+
+                    SetPixel(x + Center.X, y + Center.Y,c2);
+                    SetPixel(-x + Center.X, y + Center.Y,c2);
+                    SetPixel(x + Center.X, -y + Center.Y,c2);
+                    SetPixel(-x + Center.X, -y + Center.Y,c2);
+
+                    SetPixel(x + Center.X -1, y + Center.Y, c2);
+                    SetPixel(-x + Center.X -1, y + Center.Y, c2);
+                    SetPixel(x + Center.X -1, -y + Center.Y, c2);
+                    SetPixel(-x + Center.X -1, -y + Center.Y, c2);
+
+                    if (x != y)
+                    {
+                        SetPixel(y + Center.X, x + Center.Y,c2);
+                        SetPixel(-y + Center.X, x + Center.Y,c2);
+                        SetPixel(y + Center.X, -x + Center.Y,c2);
+                        SetPixel(-y + Center.X, -x + Center.Y,c2);
+
+                        SetPixel(y + Center.X -1, x + Center.Y, c2);
+                        SetPixel(-y + Center.X -1, x + Center.Y, c2);
+                        SetPixel(y + Center.X -1, -x + Center.Y, c2);
+                        SetPixel(-y + Center.X -1, -x + Center.Y, c2);
+
+                    }
                 }
             }
             finally

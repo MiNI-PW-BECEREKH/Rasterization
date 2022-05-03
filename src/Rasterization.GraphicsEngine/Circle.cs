@@ -38,7 +38,7 @@ namespace Rasterization.Engine
 
             Points.Add(new Point(x + Center.X, y + Center.Y));
 
-            if(Radius > 0)
+            if (Radius > 0)
             {
                 Points.Add(new Point(x + Center.X, y + Center.Y));
                 Points.Add(new Point(y + Center.X, x + Center.Y));
@@ -124,6 +124,21 @@ namespace Rasterization.Engine
         public void CalculateBrush()
         {
             Brush.CalculatePoints();
+        }
+
+        public void DrawAA(IGraphicsEngine engine)
+        {
+            engine.DrawAACircle(this);
+        }
+
+        public void UpScale(IGraphicsEngine engine)
+        {
+            Erase(engine);
+            Brush.Radius = 2 * Brush.Radius;
+            Center = new Point(Center.X * 2, Center.Y * 2);
+            Radius = 2 * Radius;
+            CalculatePoints();
+            Draw(engine);
         }
     }
 }

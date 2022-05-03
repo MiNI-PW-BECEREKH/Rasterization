@@ -15,12 +15,18 @@ namespace Rasterization.Engine
         void CalculateBrush();
 
         void CalculatePoints();
+
         bool HitTest(Point p);
+
+        void DrawAA(IGraphicsEngine engine);
+
+        void UpScale(IGraphicsEngine engine);
 
         Color Color { get; set; }
         List<Point> StretchablePoints { get; set; }
         List<Point> Points { get; set; }
 
         FilledCircle Brush { get; set; }
+
     }
 }

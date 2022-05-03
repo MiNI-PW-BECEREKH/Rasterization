@@ -112,5 +112,15 @@ namespace Rasterization.Engine
                 line.Brush.CalculatePoints();
             }
         }
+
+        public void DrawAA(IGraphicsEngine engine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpScale(IGraphicsEngine engine)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
