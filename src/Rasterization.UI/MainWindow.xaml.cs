@@ -18,6 +18,8 @@ namespace Rasterization.UI
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    /// 
+    //TODO: CLEAN THIS UP WHEN U HAVE TIME IT GOT VERY MESSY. YOU WILL USE IT FOR PROJ 4 
     public partial class MainWindow : Window
     {
         List<Point> CachedPoints = new List<Point>();
