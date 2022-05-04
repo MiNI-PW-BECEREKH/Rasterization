@@ -7,7 +7,6 @@ namespace Rasterization.Engine
 {
     public class GraphicsEngine : IGraphicsEngine
     {
-        bool lazyMansStackOverflowProtection = false;
         public WriteableBitmap Bitmap { get; set; }
 
         public Color BackGround { get; set; } = Color.FromArgb(240, 240, 240);
@@ -17,45 +16,6 @@ namespace Rasterization.Engine
         public GraphicsEngine(WriteableBitmap writeableBitmap)
         {
             Bitmap = writeableBitmap;
-        }
-        public void Draw(Line line)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in line.Points)
-                {
-                    SetPixel(point.X, point.Y, line.Color);
-                    line.Brush.Center = point;
-                    line.Brush.CalculatePoints();
-                    Draw(line.Brush);
-
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-
-        }
-
-        public void Erase(Line line)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in line.Points)
-                {
-                    SetPixel(point.X, point.Y, BackGround);
-                    line.Brush.Center = point;
-                    line.Brush.CalculatePoints();
-                    Erase(line.Brush);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
         }
 
         void SetPixel(int x, int y, Color color)
@@ -85,6 +45,49 @@ namespace Rasterization.Engine
             Bitmap.AddDirtyRect(new Int32Rect(x, y, 1, 1));
         }
 
+        #region lineprocedures
+        public void Draw(Line line)
+        {
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in line.Points)
+                {
+                    SetPixel(point.X, point.Y, line.Color);
+                    //line.Brush.Center = point;
+                    //line.Brush.CalculatePoints();
+                    //Draw(line.Brush);
+
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+
+        }
+
+        public void Erase(Line line)
+        {
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in line.Points)
+                {
+                    SetPixel(point.X, point.Y, BackGround);
+                    //line.Brush.Center = point;
+                    //line.Brush.CalculatePoints();
+                    //Erase(line.Brush);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+
+
         public void Transparent(Line line)
         {
             Erase(line);
@@ -95,9 +98,9 @@ namespace Rasterization.Engine
                 foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
-                    line.Brush.Center = point;
-                    line.Brush.CalculatePoints();
-                    Transparent(line.Brush);
+                    //line.Brush.Center = point;
+                    //line.Brush.CalculatePoints();
+                    //Transparent(line.Brush);
                 }
             }
             finally
@@ -115,9 +118,9 @@ namespace Rasterization.Engine
                 foreach (var point in line.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
-                    line.Brush.Center = point;
-                    line.Brush.CalculatePoints();
-                    Stretch(line.Brush);
+                    //line.Brush.Center = point;
+                    //line.Brush.CalculatePoints();
+                    //Stretch(line.Brush);
                 }
             }
             finally
@@ -126,6 +129,30 @@ namespace Rasterization.Engine
             }
         }
 
+        public void Move(Line line)
+        {
+            GrabbedItemColor = Color.FromArgb(128, line.Color.R, line.Color.G, line.Color.B);
+            Bitmap.Lock();
+            try
+            {
+                foreach (var point in line.Points)
+                {
+                    SetPixel(point.X, point.Y, GrabbedItemColor);
+                    //line.Brush.Center = point;
+                    ////TODO: fix brush
+                    //line.Brush.CalculatePoints();
+                    //Move(line.Brush);
+                }
+            }
+            finally
+            {
+                Bitmap.Unlock();
+            }
+        }
+
+        #endregion
+
+        #region circleprocedures
         public void Draw(Circle circle)
         {
             Bitmap.Lock();
@@ -134,9 +161,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, circle.Color);
-                    circle.Brush.Center = point;
-                    circle.Brush.CalculatePoints();
-                    Draw(circle.Brush);
+                    //circle.Brush.Center = point;
+                    //circle.Brush.CalculatePoints();
+                    //Draw(circle.Brush);
                 }
             }
             finally
@@ -153,9 +180,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, BackGround);
-                    circle.Brush.Center = point;
-                    circle.Brush.CalculatePoints();
-                    Erase(circle.Brush);
+                    //circle.Brush.Center = point;
+                    //circle.Brush.CalculatePoints();
+                    //Erase(circle.Brush);
                 }
             }
             finally
@@ -174,9 +201,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
-                    circle.Brush.Center = point;
-                    circle.Brush.CalculatePoints();
-                    Transparent(circle.Brush);
+                    //circle.Brush.Center = point;
+                    //circle.Brush.CalculatePoints();
+                    //Transparent(circle.Brush);
                 }
             }
             finally
@@ -194,9 +221,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
-                    circle.Brush.Center = point;
-                    circle.Brush.CalculatePoints();
-                    Stretch(circle.Brush);
+                    //circle.Brush.Center = point;
+                    //circle.Brush.CalculatePoints();
+                    //Stretch(circle.Brush);
                 }
             }
             finally
@@ -214,9 +241,9 @@ namespace Rasterization.Engine
                 foreach (var point in circle.Points)
                 {
                     SetPixel(point.X, point.Y, GrabbedItemColor);
-                    circle.Brush.Center = point;
-                    circle.Brush.CalculatePoints();
-                    Move(circle.Brush);
+                    //circle.Brush.Center = point;
+                    //circle.Brush.CalculatePoints();
+                    //Move(circle.Brush);
                 }
             }
             finally
@@ -224,7 +251,7 @@ namespace Rasterization.Engine
                 Bitmap.Unlock();
             }
         }
-
+        #endregion
 
         public void Draw(FilledCircle circle)
         {
@@ -311,19 +338,17 @@ namespace Rasterization.Engine
             }
         }
 
-        public void Move(Line line)
+
+
+        public void Draw(Arc arc)
         {
-            GrabbedItemColor = Color.FromArgb(128, line.Color.R, line.Color.G, line.Color.B);
             Bitmap.Lock();
             try
             {
-                foreach (var point in line.Points)
+                foreach (var point in arc.Points)
                 {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                    line.Brush.Center = point;
-                    //TODO: fix brush
-                    line.Brush.CalculatePoints();
-                    Move(line.Brush);
+                    SetPixel(point.X, point.Y, arc.Color);
+
                 }
             }
             finally
@@ -332,7 +357,7 @@ namespace Rasterization.Engine
             }
         }
 
-        public void Draw(Arc arc)
+        public void Draw(Polygon arc)
         {
             Bitmap.Lock();
             try
@@ -368,11 +393,6 @@ namespace Rasterization.Engine
 
         }
 
-        //returns 1 - fractional part of number 
-        float rfPartOfNumber(float x)
-        {
-            return 1 - fPartOfNumber(x);
-        }
 
         Color C1(Color B, Color L, float y)
         {
@@ -484,50 +504,79 @@ namespace Rasterization.Engine
             try
             {
                 Bitmap.Lock();
+                //Erase(circle)
+                //Draw(circle);
                 Color L = circle.Color;
                 Color B = BackGround;
                 var Center = circle.Center;
                 int r = circle.Radius;
                 int x = circle.Radius;
                 int y = 0;
-                SetPixel(x, y, L);
+                //SetPixel(x, y, L);
 
-                while (x < y)
+                //SetPixel(Center.X + x, Center.Y + y, L);
+                //SetPixel(Center.X + x - 1, Center.Y + y, L);
+
+                //SetPixel(Center.X + y, Center.Y + x, L);
+                //SetPixel(Center.X + y - 1, Center.Y + x, L);
+
+                //SetPixel(Center.X - y, Center.Y + x, L);
+                //SetPixel(Center.X - y + 1, Center.Y + x, L);
+
+                //SetPixel(Center.X - x, Center.Y + y, L);
+                //SetPixel(Center.X - x + 1, Center.Y + y, L);
+
+                //SetPixel(Center.X - x, Center.Y - y, L);
+                //SetPixel(Center.X - x + 1, Center.Y - y, L);
+
+                //SetPixel(Center.X - y, Center.Y - x, L);
+                //SetPixel(Center.X - y + 1, Center.Y - x, L);
+
+                //SetPixel(Center.X + y, Center.Y - x, L);
+                //SetPixel(Center.X + y - 1, Center.Y - x, L);
+
+                //SetPixel(Center.X + x, Center.Y - y, L);
+                //SetPixel(Center.X + x - 1, Center.Y - y, L);
+
+                while (x > y)
                 {
                     ++y;
-                    x = (int)Math.Ceiling((decimal)(r * r - y * y));
+                    x = (int)(Math.Ceiling(Math.Sqrt((r * r) - (y * y))));
 
                     float T = (float)(Math.Ceiling(Math.Sqrt(r * r - y * y)) - Math.Sqrt(r * r - y * y));
 
                     var c2 = CircleC2(B, L, T);
                     var c1 = CircleC1(B, L, T);
 
-                    SetPixel(x, y, c2);
-                    SetPixel(x - 1, y, c1);
+                    if (y > x)
+                        break;
 
-                    SetPixel(x + Center.X, y + Center.Y,c2);
-                    SetPixel(-x + Center.X, y + Center.Y,c2);
-                    SetPixel(x + Center.X, -y + Center.Y,c2);
-                    SetPixel(-x + Center.X, -y + Center.Y,c2);
 
-                    SetPixel(x + Center.X -1, y + Center.Y, c2);
-                    SetPixel(-x + Center.X -1, y + Center.Y, c2);
-                    SetPixel(x + Center.X -1, -y + Center.Y, c2);
-                    SetPixel(-x + Center.X -1, -y + Center.Y, c2);
+                    SetPixel(Center.X + x , Center.Y + y , c2); //7
+                    SetPixel(Center.X + x  - circle.Brush.Radius -1, Center.Y + y, c1);
 
-                    if (x != y)
-                    {
-                        SetPixel(y + Center.X, x + Center.Y,c2);
-                        SetPixel(-y + Center.X, x + Center.Y,c2);
-                        SetPixel(y + Center.X, -x + Center.Y,c2);
-                        SetPixel(-y + Center.X, -x + Center.Y,c2);
+                    SetPixel(Center.X + y, Center.Y + x, c2); //8
+                    SetPixel(Center.X + y, Center.Y + x - circle.Brush.Radius -1, c1);
 
-                        SetPixel(y + Center.X -1, x + Center.Y, c2);
-                        SetPixel(-y + Center.X -1, x + Center.Y, c2);
-                        SetPixel(y + Center.X -1, -x + Center.Y, c2);
-                        SetPixel(-y + Center.X -1, -x + Center.Y, c2);
+                    SetPixel(Center.X - y, Center.Y + x, c2); //5
+                    SetPixel(Center.X - y, Center.Y + x - circle.Brush.Radius -1, c1);
 
-                    }
+                    SetPixel(Center.X - x, Center.Y + y, c2); //6
+                    SetPixel(Center.X - x + circle.Brush.Radius +1, Center.Y + y, c1);
+
+                    SetPixel(Center.X - x, Center.Y - y, c2); //3
+                    SetPixel(Center.X - x + circle.Brush.Radius+1, Center.Y - y, c1);
+
+                    SetPixel(Center.X - y, Center.Y - x, c2); //4
+                    SetPixel(Center.X - y, Center.Y - x + circle.Brush.Radius +1, c1);
+
+                    SetPixel(Center.X + y, Center.Y - x, c2); //1
+                    SetPixel(Center.X + y, Center.Y - x + circle.Brush.Radius + 1, c1);
+
+                    SetPixel(Center.X + x, Center.Y - y, c2); //2
+                    SetPixel(Center.X + x - circle.Brush.Radius -1, Center.Y - y, c1);
+
+
                 }
             }
             finally

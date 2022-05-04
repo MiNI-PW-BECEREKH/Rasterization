@@ -20,6 +20,8 @@ namespace Rasterization.Engine
 
         void Draw(Arc arc);
 
+        void Draw(Polygon arc);
+
         void DrawAALine(Line line);
 
         void DrawAACircle(Circle circle);

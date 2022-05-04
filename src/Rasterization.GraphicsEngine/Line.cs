@@ -3,6 +3,7 @@ using System.Media;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 
 namespace Rasterization.Engine
 {
@@ -12,10 +13,20 @@ namespace Rasterization.Engine
         public Point EndingPoint { get; set; }
 
         public List<Point> Points { get; set; } = new();
-        public Color Color { get ; set; }
+        public Color Color { get ; set; } = Color.Black;
         public List<Point> StretchablePoints { get; set; } = new();
+        [XmlIgnore]
         public FilledCircle Brush { get ; set ; }
+        public List<Point> BrushPoints { get ; set ; }
+        public List<Point> BasePoints { get; set; } = new List<Point>();
+        public bool IsAA { get ; set ; }
+        public string Name { get; set; } = "Line";
+        public List<Line> Lines { get; set ; }
 
+        public Line()
+        {
+
+        }
         public Line(Point sp, Point ep,Color color, int bs)
         {
             StartingPoint = sp;
@@ -33,6 +44,7 @@ namespace Rasterization.Engine
         public void CalculatePoints()
         {
             Points.Clear();
+            BasePoints.Clear();
             //https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
             int x1 = StretchablePoints[0].X;
             int y1 = StretchablePoints[0].Y;
@@ -58,6 +70,8 @@ namespace Rasterization.Engine
                     CalculateHighPoints(x1, y1, x2, y2);
 
             }
+
+            CalculateBrush();
         }
 
         void CalculateLowPoints(int x1, int y1, int x2, int y2)
@@ -75,7 +89,7 @@ namespace Rasterization.Engine
 
             foreach(var x in Enumerable.Range(Math.Min(x1,x2),Math.Abs(x1 - x2)))
             {
-                Points.Add(new Point(x, y));
+                BasePoints.Add(new Point(x, y));
                 if (d > 0)
                 {
                     y = y + yi;
@@ -103,7 +117,7 @@ namespace Rasterization.Engine
 
             foreach (var y in Enumerable.Range(Math.Min(y1, y2), Math.Abs(y1 - y2)))
             {
-                Points.Add(new Point(x,y));
+                BasePoints.Add(new Point(x,y));
                 if (d > 0)
                 {
                     x = x + xi;
@@ -118,6 +132,11 @@ namespace Rasterization.Engine
 
         public void Draw(IGraphicsEngine engine)
         {
+            if(IsAA)
+            {
+                engine.DrawAALine(this);
+            }
+            else
             engine.Draw(this);
         }
 
@@ -133,7 +152,12 @@ namespace Rasterization.Engine
 
         public void IndicateSelection(IGraphicsEngine engine)
         {
-            engine.Transparent(this);
+            if (IsAA)
+            {
+                engine.DrawAALine(this);
+            }
+            else
+                engine.Transparent(this);
         }
 
         public void Stretch(IGraphicsEngine engine, int dx, int dy, int idx)
@@ -142,25 +166,36 @@ namespace Rasterization.Engine
             StretchablePoints.Remove(p);
             StretchablePoints.Insert(idx,new Point(p.X + dx , p.Y + dy ));
             CalculatePoints();
-            engine.Stretch(this);
+            if (IsAA)
+            {
+                engine.DrawAALine(this);
+            }
+            else
+                engine.Stretch(this);
         }
 
         public void Move(IGraphicsEngine engine, int dx, int dy, int idx)
         {
             var p = StretchablePoints[0];
             StretchablePoints.RemoveAt(0);
-            StretchablePoints.Insert(0,new Point(p.X + dx, p.Y +  dy));
+            StretchablePoints.Insert(0,new Point(p.X + dx ,  p.Y +  dy ));
             p = StretchablePoints[1];
             StretchablePoints.RemoveAt(1);
-            StretchablePoints.Insert(1, new Point(p.X + dx, p.Y + dy));
+            StretchablePoints.Insert(1, new Point(p.X + dx,  p.Y + dy ));
             CalculatePoints();
-            engine.Move(this);
+            if (IsAA)
+            {
+                engine.DrawAALine(this);
+            }
+            else
+                engine.Move(this);
         }
 
         public void CalculateBrush()
         {
-            Brush.CalculatePoints();
-            //Points.AddRange(Brush.Points);
+            Brush.CalculatePoints(BasePoints);
+            Points.AddRange(Brush.Points);
+            Points.AddRange(BasePoints);
         }
 
         public void DrawAA(IGraphicsEngine engine)

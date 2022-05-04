@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace Rasterization.Engine
@@ -9,19 +10,37 @@ namespace Rasterization.Engine
         {
         }
 
-        public override void CalculatePoints()
+        public void CalculatePoints(List<Point> points)
         {
             Points.Clear();
 
-            for(int x = -Radius; x <= Radius; x++)
+            foreach (var point in points)
             {
-                int height = (int)Math.Sqrt(Radius * Radius - x * x);
+                //for(int x = -Radius; x <= Radius; x++)
+                //{
+                //    int height = (int)Math.Sqrt(Radius * Radius - x * x);
 
-                for (int y = -height; y < height; y++)
+                //    for (int y = -height; y < height; y++)
+                //    {
+                //        Points.Add(new Point(x + point.X, y + point.Y));
+                //    }
+                //}
+                int r2 = Radius * Radius;
+                int area = r2 << 2;
+                int rr = Radius << 1;
+
+                for (int i = 0; i < area; i++)
                 {
-                    Points.Add(new Point(x + Center.X, y + Center.Y));
+                    int tx = (i % rr) - Radius;
+                    int ty = (i / rr) - Radius;
+
+                    if (tx * tx + ty * ty <= r2 && !Points.Contains(new Point(point.X + tx, point.Y + ty)))
+                        Points.Add(new Point(point.X + tx, point.Y + ty));
+                        //SetPixel(x + tx, y + ty, c);
                 }
+
             }
+
         }
     }
 }
