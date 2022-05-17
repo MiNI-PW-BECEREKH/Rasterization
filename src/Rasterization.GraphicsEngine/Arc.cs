@@ -16,6 +16,11 @@ namespace Rasterization.Engine
         public FilledCircle Brush { get; set; }
 
         public List<Circle> Circles { get; set; } = new();
+        public List<Point> BrushPoints { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public List<Point> BasePoints { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool IsAA { get ; set ; }
+        public string Name { get; set; } = "Arc";
+        public List<Line> Lines { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public Arc(List<Point> pts)
         {

@@ -22,10 +22,13 @@ namespace Rasterization.Engine
 
         void UpScale(IGraphicsEngine engine);
 
-        Color Color { get; set; }
+        string Name { get; set; }
+        bool IsAA { get; set; }
+        Color Color { get; set; } 
         List<Point> StretchablePoints { get; set; }
         List<Point> Points { get; set; }
-
+        List<Point> BasePoints { get; set; }
+        List<Point> BrushPoints { get; set; }
         FilledCircle Brush { get; set; }
 
     }

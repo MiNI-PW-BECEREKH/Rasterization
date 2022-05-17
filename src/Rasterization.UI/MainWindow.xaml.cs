@@ -12,6 +12,9 @@ using Point = System.Drawing.Point;
 using Color = System.Drawing.Color;
 using System.Windows.Controls.Primitives;
 using Rasterization.UI.ConversionExtension;
+using Microsoft.Win32;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace Rasterization.UI
 {
@@ -44,8 +47,8 @@ namespace Rasterization.UI
             CircleDrawingButton.IsChecked = false;
             PolygonDrawingButton.IsChecked = false;
             ArcDrawingButton.IsChecked = false;
-            WuLineDrawingButton.IsChecked = false;
-            WuCircleDrawingButton.IsChecked = false;
+            //WuLineDrawingButton.IsChecked = false;
+            //WuCircleDrawingButton.IsChecked = false;
             try
             {
                 var btn = (ToggleButton)sender;
@@ -87,19 +90,19 @@ namespace Rasterization.UI
 
                     }
                 }
-                if ((bool)WuLineDrawingButton.IsChecked)
-                {
-                    CachedPoints.Add(pointWithInts);
+                //if ((bool)WuLineDrawingButton.IsChecked)
+                //{
+                //    CachedPoints.Add(pointWithInts);
 
-                    if (CachedPoints.Count == 2)
-                    {
-                        Line line = new Line(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
-                        CachedPoints.Clear();
-                        Drawables.Add(line);
-                        line.DrawAA(GE);
+                //    if (CachedPoints.Count == 2)
+                //    {
+                //        Line line = new Line(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
+                //        CachedPoints.Clear();
+                //        Drawables.Add(line);
+                //        line.DrawAA(GE);
 
-                    }
-                }
+                //    }
+                //}
                 if ((bool)CircleDrawingButton.IsChecked)
                 {
                     CachedPoints.Add(pointWithInts);
@@ -114,26 +117,27 @@ namespace Rasterization.UI
 
                     }
                 }
-                if ((bool)WuCircleDrawingButton.IsChecked)
-                {
-                    CachedPoints.Add(pointWithInts);
+                //if ((bool)WuCircleDrawingButton.IsChecked)
+                //{
+                //    CachedPoints.Add(pointWithInts);
 
-                    if (CachedPoints.Count == 2)
-                    {
-                        Circle circle = new Circle(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
-                        CachedPoints.Clear();
-                        Drawables.Add(circle);
-                        circle.DrawAA(GE);
+                //    if (CachedPoints.Count == 2)
+                //    {
+                //        Circle circle = new Circle(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
+                //        CachedPoints.Clear();
+                //        Drawables.Add(circle);
+                //        circle.CalculatePoints();
+                //        circle.DrawAA(GE);
 
-                    }
-                }
+                //    }
+                //}
                 if ((bool)PolygonDrawingButton.IsChecked)
                 {
                     var initialPoint = CachedPoints.FirstOrDefault();
-                    if(((int)Math.Sqrt(Math.Pow(initialPoint.X - pointWithInts.X, 2) + Math.Pow(initialPoint.Y - pointWithInts.Y, 2)) < 50))
+                    if (((int)Math.Sqrt(Math.Pow(initialPoint.X - pointWithInts.X, 2) + Math.Pow(initialPoint.Y - pointWithInts.Y, 2)) < 50))
                     {
                         //CachedPoints.Add(CachedPoints.First());
-                        Polygon polygon= new Polygon(CachedPoints, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
+                        Polygon polygon = new Polygon(CachedPoints, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
                         polygon.CalculatePoints();
                         Drawables.Add(polygon);
                         polygon.Draw(GE);
@@ -141,7 +145,7 @@ namespace Rasterization.UI
                     }
                     else
                         CachedPoints.Add(pointWithInts);
-                    
+
                 }
                 if ((bool)ArcDrawingButton.IsChecked)
                 {
@@ -182,14 +186,18 @@ namespace Rasterization.UI
             {
                 MessageBox.Show(ex.Message);
             }
+            finally
+            {
+                MousePointRegister = pointWithInts;
+            }
 
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             PixelFormat pf = PixelFormats.Bgra32;
-            int width = 1200/2;
-            int height = 1200/2;
+            int width = 1200 / 2;
+            int height = 1200 / 2;
             int rawStride = (width * pf.BitsPerPixel + 7) / 8;
             byte[] rawImage = new byte[rawStride * height];
             rawImage = Enumerable.Repeat((byte)240, rawImage.Length).ToArray();
@@ -218,7 +226,7 @@ namespace Rasterization.UI
         {
             var p = e.GetPosition(ImageCanvas);
             var pointWithInts = new Point((int)p.X, (int)p.Y);
-            if (SelectedDrawable != null && e.LeftButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(point => Math.Sqrt(Math.Pow(pointWithInts.X - point.X, 2) + Math.Pow(pointWithInts.Y - point.Y, 2)) < 150))
+            if (SelectedDrawable != null && e.LeftButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(point => Math.Sqrt(Math.Pow(pointWithInts.X - point.X, 2) + Math.Pow(pointWithInts.Y - point.Y, 2)) < 25))
             {
                 var min = 35000;
                 int closestPointIdx = 0;
@@ -237,31 +245,32 @@ namespace Rasterization.UI
                 var dy = (pointWithInts.Y - MousePointRegister.Y);
                 //dx *= dx / dy;
                 //dy *= dx / dy;
+
                 SelectedDrawable.Erase(GE);
                 SelectedDrawable.Stretch(GE, dx, dy, closestPointIdx);
-                MousePointRegister = pointWithInts;
                 Drawables.Where(x => x != SelectedDrawable).ToList().ForEach(x => x.Draw(GE));
+                MousePointRegister = pointWithInts;
+
             }
 
-            if (SelectedDrawable != null && e.MiddleButton == MouseButtonState.Pressed && SelectedDrawable.StretchablePoints.Any(p => Math.Sqrt(Math.Pow(pointWithInts.X - p.X, 2) + Math.Pow(pointWithInts.Y - p.Y, 2)) < 50))
+            if (SelectedDrawable != null && e.RightButton == MouseButtonState.Pressed && SelectedDrawable.Points.Any(p => Math.Sqrt(Math.Pow(pointWithInts.X - p.X, 2) + Math.Pow(pointWithInts.Y - p.Y, 2)) < 25))
             {
                 var min = 35000;
                 int closestPointIdx = 0;
-                foreach (var pt in SelectedDrawable.StretchablePoints)
+                foreach (var pt in SelectedDrawable.Points)
                 {
                     var minToCheck = (int)Math.Sqrt(Math.Pow(pointWithInts.X - pt.X, 2) + Math.Pow(pointWithInts.Y - pt.Y, 2));
                     var isNewMin = minToCheck < min;
                     if (isNewMin)
                     {
-                        closestPointIdx = SelectedDrawable.StretchablePoints.IndexOf(pt);
+                        closestPointIdx = SelectedDrawable.Points.IndexOf(pt);
                         min = minToCheck;
                     }
                 }
 
                 var dx = (pointWithInts.X - MousePointRegister.X);
                 var dy = (pointWithInts.Y - MousePointRegister.Y);
-                //dx *= dx / dy;
-                //dy *= dx / dy;
+
                 SelectedDrawable.Erase(GE);
                 SelectedDrawable.Move(GE, dx, dy, closestPointIdx);
                 MousePointRegister = pointWithInts;
@@ -270,7 +279,7 @@ namespace Rasterization.UI
             }
         }
 
-        private void ImageCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void ImageCanvas_ButtonDown(object sender, MouseButtonEventArgs e)
         {
             var p = e.GetPosition(ImageCanvas);
             var pointWithInts = new Point((int)p.X, (int)p.Y);
@@ -291,11 +300,11 @@ namespace Rasterization.UI
 
         private void BrushInput_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if(SelectedDrawable != null)
+            if (SelectedDrawable != null)
             {
                 SelectedDrawable.Erase(GE);
                 SelectedDrawable.Brush.Radius = (int)e.NewValue;
-                SelectedDrawable.CalculateBrush();
+                SelectedDrawable.CalculatePoints();
                 SelectedDrawable.IndicateSelection(GE);
             }
         }
@@ -318,17 +327,17 @@ namespace Rasterization.UI
 
 
             GE.Bitmap = writeable;
-            foreach(var vector in Drawables)
+            foreach (var vector in Drawables)
             {
 
-                    vector.UpScale(GE);
+                vector.UpScale(GE);
 
             }
 
 
 
-            int width = 1200/2;
-            int height = 1200/2;
+            int width = 1200 / 2;
+            int height = 1200 / 2;
             int rawStride = (width * pf.BitsPerPixel + 7) / 8;
             byte[] rawImage = new byte[rawStride * height];
             rawImage = Enumerable.Repeat((byte)240, rawImage.Length).ToArray();
@@ -351,9 +360,9 @@ namespace Rasterization.UI
 
                     unsafe
                     {
-                        for (int col = 0; col < 1200 ; col++)
+                        for (int col = 0; col < 1200; col++)
                         {
-                            for (int row = 0; row < 1200 ; row++)
+                            for (int row = 0; row < 1200; row++)
                             {
                                 Color pixelColor = Color.Empty;
                                 List<int> redChannelValues = new();
@@ -396,12 +405,12 @@ namespace Rasterization.UI
 
                                     }
                                 }
-                                 
+
                                 var red = redChannelValues.Average();
                                 var blue = blueChannelValues.Average();
                                 var green = greenChannelValues.Average();
                                 //here get median
-                                    writeable2.SetPixel(col/2 , row/2 , Color.FromArgb((int)red, (int)green, (int)blue));
+                                writeable2.SetPixel(col / 2, row / 2, Color.FromArgb((int)red, (int)green, (int)blue));
                             }
                         }
                     }
@@ -419,6 +428,152 @@ namespace Rasterization.UI
             ImageCanvas.Source = writeable2;
             GE.Bitmap = (WriteableBitmap)ImageCanvas.Source;
 
+        }
+
+        private void AntiAliasing_Checked(object sender, RoutedEventArgs e)
+        {
+            foreach (var drawable in Drawables)
+            {
+                drawable.Erase(GE);
+                drawable.DrawAA(GE);
+                drawable.IsAA = true;
+            }
+        }
+
+        private void AntiAliasing_Unchecked(object sender, RoutedEventArgs e)
+        {
+            foreach (IDrawable drawable in Drawables)
+            {
+                drawable.IsAA = false;
+                drawable.Erase(GE);
+                drawable.Draw(GE);
+            }
+        }
+
+        double currentScale = 1.0;
+        private void ImageCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            var position = e.MouseDevice.GetPosition(ImageCanvas);
+            var renderTransformValue = ImageCanvas.RenderTransform.Value;
+            if (e.Delta > 0)
+            {
+                currentScale += 0.1;
+            }
+            else if (e.Delta < 0)
+            {
+                currentScale -= 0.1;
+                if (currentScale < 1.0)
+                    currentScale = 1.0;
+            }
+            ImageCanvas.RenderTransform = new ScaleTransform(currentScale, currentScale, position.X, position.Y);
+        }
+
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                {
+                    openFileDialog.Filter = "xml files (*.xml) | *.xml";
+                    openFileDialog.FilterIndex = 1;
+                    openFileDialog.RestoreDirectory = true;
+                    if (openFileDialog.ShowDialog(this) == true)
+                    {
+                        if (openFileDialog.FileName != "")
+                        {
+                            var stream = new FileStream(openFileDialog.FileName, FileMode.Open, FileAccess.Read);
+                            var xmlSerializer = new XmlSerializer(new List<Serializable>().GetType());
+
+                            //XmlDictionaryReader reader =
+                            //    XmlDictionaryReader.CreateTextReader(stream, new XmlDictionaryReaderQuotas());
+
+
+
+                            ////RESET THE APP
+                            //ProgressBar.Value = 0;
+                            //stopwatch.Reset();
+                            //timer.Stop();
+                            //Canvas.Children.Clear();
+                            //Circles.Clear();
+                            //NewCircleLocation = new Point(Canvas.ActualWidth / 2, Canvas.ActualHeight / 2);
+
+                            var items = (List<Serializable>)xmlSerializer.Deserialize(stream);
+                            stream.Close();
+
+                            foreach(var item in items)
+                            {
+                                switch (item.Name)
+                                {
+                                    case "Line":
+                                        var ln = new Line();
+                                        ln.Points = item.Points;
+                                        ln.BasePoints = item.BasePoints;
+                                        Drawables.Add(ln);
+                                        break;
+                                    case "Circle":
+                                        var c = new Circle();
+                                        c.Points = item.Points;
+                                        c.BasePoints = item.BasePoints;
+                                        Drawables.Add(c);
+                                        break;
+                                    case "Polygon":
+                                        var p = new Polygon();
+                                        p.Points = item.Points;
+                                        p.BasePoints = item.BasePoints;
+                                        Drawables.Add(p);
+                                        break;
+                                }
+
+                            }
+
+                            Drawables.ForEach(x => x.Draw(GE));
+
+
+                        }
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Error", MessageBoxButton.OK);
+            }
+        }
+
+        public struct Serializable
+        {
+            public List<Point> Points;
+            public List<Point> BasePoints;
+            public string Name;
+        }
+
+        private void SaveImage_Click(object sender, RoutedEventArgs e)
+        {
+            var serList = new List<Serializable>();
+            foreach(var item in Drawables)
+            {
+                serList.Add(new Serializable { Points = item.Points, BasePoints = item.BasePoints , Name = item.Name});
+                
+            }
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Image files (*.xml)|*.xml|All Files (*.*)|*.*";
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                if (saveFileDialog.FileName != string.Empty)
+                {
+                    using (FileStream stream = new FileStream(saveFileDialog.FileName, FileMode.OpenOrCreate))
+                    {
+                        //PngBitmapEncoder encoder = new PngBitmapEncoder();
+                        //encoder.Frames.Add(BitmapFrame.Create((WriteableBitmap)modifiedImageCanvas.Source));
+                        //encoder.Save(stream);
+                        var xmlSerializer = new XmlSerializer(serList.GetType());
+                        xmlSerializer.Serialize(stream, serList);
+                        stream.Close();
+                    }
+                }
+
+            }
         }
     }
 }

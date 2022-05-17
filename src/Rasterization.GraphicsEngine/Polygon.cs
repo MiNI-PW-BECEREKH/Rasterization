@@ -9,16 +9,25 @@ namespace Rasterization.Engine
 {
     public class Polygon : IDrawable
     {
-        public Color Color { get ; set ; }
-        public List<Point> StretchablePoints { get ; set ; }
+        public Color Color { get; set; }
+        public List<Point> StretchablePoints { get; set; }
         public List<Point> Points { get; set; } = new();
 
-        private List<Line> Lines { get; set; } = new();
-        public FilledCircle Brush { get; set ; }
+        public List<Line> Lines { get; set; } = new();
+        public FilledCircle Brush { get; set; }
+        public List<Point> BrushPoints { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public List<Point> BasePoints { get; set; } = new();
+        public bool IsAA { get; set; }
+        public string Name { get; set; } = "Polygon";
 
-        public Polygon(List<Point> stretchablePoints , Color c, int bs)
+        public Polygon()
         {
-            StretchablePoints = new List<Point>(stretchablePoints) ;
+
+        }
+
+        public Polygon(List<Point> stretchablePoints, Color c, int bs)
+        {
+            StretchablePoints = new List<Point>(stretchablePoints);
             Color = c;
             Brush = new FilledCircle(new Point(0, 0), new Point(bs, bs), Color);
 
@@ -27,6 +36,7 @@ namespace Rasterization.Engine
             //{
             //    Lines.Add(new Line(StretchablePoints[i - 1], StretchablePoints[i], Color));
             //}
+
 
         }
 
@@ -37,7 +47,7 @@ namespace Rasterization.Engine
             for (int i = 0; i < StretchablePoints.Count; i++)
             {
                 Point end;
-                if(i + 1 >= StretchablePoints.Count)
+                if (i + 1 >= StretchablePoints.Count)
                 {
                     end = StretchablePoints.FirstOrDefault();
                 }
@@ -50,20 +60,24 @@ namespace Rasterization.Engine
             {
                 line.CalculatePoints();
                 Points.AddRange(line.Points);
+                BasePoints.AddRange(line.BasePoints);
             }
         }
 
         public void Draw(IGraphicsEngine engine)
         {
-            foreach(var line in Lines)
-            {
-                line.Draw(engine);
-            }
+            if (Lines.Count == 0)
+                engine.Draw(this);
+            else
+                foreach (var line in Lines)
+                {
+                    line.Draw(engine);
+                }
         }
 
         public void Erase(IGraphicsEngine engine)
         {
-            foreach(var line in Lines)
+            foreach (var line in Lines)
                 line.Erase(engine);
         }
 
@@ -82,22 +96,25 @@ namespace Rasterization.Engine
 
         public void Move(IGraphicsEngine engine, int dx, int dy, int idx)
         {
-            throw new NotImplementedException();
+            foreach (var line in Lines)
+            {
+                line.Move(engine, dx, dy, idx);
+            }
         }
 
         public void Stretch(IGraphicsEngine engine, int dx, int dy, int idx)
         {
             int lineIdx;
-            foreach(var line in Lines)
+            foreach (var line in Lines)
             {
-                
-                if(line.StretchablePoints.Contains(StretchablePoints[idx]))
+
+                if (line.StretchablePoints.Contains(StretchablePoints[idx]))
                 {
                     line.Erase(engine);
                     lineIdx = line.StretchablePoints.IndexOf(StretchablePoints[idx]);
                     line.Stretch(engine, dx, dy, lineIdx);
                     StretchablePoints.RemoveAt(idx);
-                    StretchablePoints.Insert(idx,line.StretchablePoints[lineIdx]);
+                    StretchablePoints.Insert(idx, line.StretchablePoints[lineIdx]);
                 }
             }
             CalculatePoints();
@@ -106,7 +123,7 @@ namespace Rasterization.Engine
 
         public void CalculateBrush()
         {
-            foreach(var line in Lines)
+            foreach (var line in Lines)
             {
                 line.Brush = Brush;
                 line.Brush.CalculatePoints();
@@ -115,7 +132,10 @@ namespace Rasterization.Engine
 
         public void DrawAA(IGraphicsEngine engine)
         {
-            throw new NotImplementedException();
+            foreach (var line in Lines)
+            {
+                line.DrawAA(engine);
+            }
         }
 
         public void UpScale(IGraphicsEngine engine)

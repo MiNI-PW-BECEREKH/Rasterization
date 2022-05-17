@@ -11,11 +11,20 @@ namespace Rasterization.Engine
     {
         public int Radius { get; set; }
         public Point Center {  get; set; }
-        public Color Color { get ; set ; }
+        public Color Color { get ; set ; } = Color.Black;
         public List<Point> StretchablePoints { get ; set ; }
         public List<Point> Points { get; set; } = new();
         public FilledCircle Brush { get ; set ; }
+        public List<Point> BrushPoints { get ; set ; }
+        public List<Point> BasePoints { get; set; } = new();
+        public bool IsAA { get ; set ; }
+        public string Name { get; set; } = "Circle";
+        public List<Line> Lines { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
+        public Circle()
+        {
+
+        }
         public Circle(Point center, Point radiusIndicator, Color color, int bs)
         {
             Center = center;
@@ -34,15 +43,16 @@ namespace Rasterization.Engine
         public virtual void CalculatePoints()
         {
             Points.Clear();
+            BasePoints.Clear();
             int x = Radius, y = 0;
 
-            Points.Add(new Point(x + Center.X, y + Center.Y));
+            BasePoints.Add(new Point(x + Center.X, y + Center.Y));
 
             if (Radius > 0)
             {
-                Points.Add(new Point(x + Center.X, y + Center.Y));
-                Points.Add(new Point(y + Center.X, x + Center.Y));
-                Points.Add(new Point(-y + Center.X, x + Center.Y));
+                BasePoints.Add(new Point(x + Center.X, y + Center.Y));
+                BasePoints.Add(new Point(y + Center.X, x + Center.Y));
+                BasePoints.Add(new Point(-y + Center.X, x + Center.Y));
             }
 
             int d = 1 - Radius;
@@ -62,28 +72,34 @@ namespace Rasterization.Engine
                 if (x < y)
                     break;
 
-                Points.Add(new Point(x + Center.X, y + Center.Y));
-                Points.Add(new Point(-x + Center.X, y + Center.Y));
-                Points.Add(new Point(x + Center.X, -y + Center.Y));
-                Points.Add(new Point(-x + Center.X, -y + Center.Y));
+                BasePoints.Add(new Point(x + Center.X, y + Center.Y));
+                BasePoints.Add(new Point(-x + Center.X, y + Center.Y));
+                BasePoints.Add(new Point(x + Center.X, -y + Center.Y));
+                BasePoints.Add(new Point(-x + Center.X, -y + Center.Y));
 
                 if(x != y)
                 {
-                    Points.Add(new Point(y + Center.X, x + Center.Y));
-                    Points.Add(new Point(-y + Center.X, x + Center.Y));
-                    Points.Add(new Point(y + Center.X, -x + Center.Y));
-                    Points.Add(new Point(-y + Center.X, -x + Center.Y));
+                    BasePoints.Add(new Point(y + Center.X, x + Center.Y));
+                    BasePoints.Add(new Point(-y + Center.X, x + Center.Y));
+                    BasePoints.Add(new Point(y + Center.X, -x + Center.Y));
+                    BasePoints.Add(new Point(-y + Center.X, -x + Center.Y));
 
                 }
 
             }
 
+            CalculateBrush();
             StretchablePoints = new List<Point>(Points);
         }
 
         public void Draw(IGraphicsEngine engine)
         {
-            engine.Draw(this);
+            if (IsAA)
+            {
+                engine.DrawAACircle(this);
+            }
+            else
+                engine.Draw(this);
         }
 
         public void Erase(IGraphicsEngine engine)
@@ -98,7 +114,12 @@ namespace Rasterization.Engine
 
         public void IndicateSelection(IGraphicsEngine engine)
         {
-            engine.Transparent(this);
+            if (IsAA)
+            {
+                engine.DrawAACircle(this);
+            }
+            else
+                engine.Transparent(this);
         }
 
         public void Stretch(IGraphicsEngine engine, int dx, int dy, int idx)
@@ -118,12 +139,19 @@ namespace Rasterization.Engine
         {
             Center = new Point(Center.X + dx, Center.Y + dy);
             CalculatePoints();
-            engine.Move(this);
+            if (IsAA)
+            {
+                engine.DrawAACircle(this);
+            }
+            else
+                engine.Move(this);
         }
 
         public void CalculateBrush()
         {
-            Brush.CalculatePoints();
+            Brush.CalculatePoints(BasePoints);
+            Points.AddRange(Brush.Points);
+            Points.AddRange(BasePoints);
         }
 
         public void DrawAA(IGraphicsEngine engine)
@@ -138,7 +166,12 @@ namespace Rasterization.Engine
             Center = new Point(Center.X * 2, Center.Y * 2);
             Radius = 2 * Radius;
             CalculatePoints();
-            Draw(engine);
+            if (IsAA)
+            {
+                engine.DrawAACircle(this);
+            }
+            else
+                Draw(engine);
         }
     }
 }
