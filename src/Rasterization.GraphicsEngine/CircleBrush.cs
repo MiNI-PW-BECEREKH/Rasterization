@@ -4,11 +4,22 @@ using System.Drawing;
 
 namespace Rasterization.Engine
 {
-    public class FilledCircle : Circle
+    public class CircleBrush : ICircle
     {
-        public FilledCircle(Point center, Point radiusIndicator, Color color) : base(center, radiusIndicator, color)
+        public CircleBrush(Point center, int radiusIndicator, Color color) 
         {
+            Center = center;
+            Radius = radiusIndicator;
+            Color = color;
         }
+
+        public int Radius { get ; set; }
+        public Point Center { get; set ; }
+        public string Name { get; set ; }
+        public Color Color { get ; set; }
+        public List<Point> Points { get; set; } = new();
+        public List<Point> BasePoints { get ; set; }
+        public List<Point> StretchablePoints { get ; set ; }
 
         public void CalculatePoints(List<Point> points)
         {
@@ -16,15 +27,7 @@ namespace Rasterization.Engine
 
             foreach (var point in points)
             {
-                //for(int x = -Radius; x <= Radius; x++)
-                //{
-                //    int height = (int)Math.Sqrt(Radius * Radius - x * x);
 
-                //    for (int y = -height; y < height; y++)
-                //    {
-                //        Points.Add(new Point(x + point.X, y + point.Y));
-                //    }
-                //}
                 int r2 = Radius * Radius;
                 int area = r2 << 2;
                 int rr = Radius << 1;
@@ -36,7 +39,6 @@ namespace Rasterization.Engine
 
                     if (tx * tx + ty * ty <= r2 && !Points.Contains(new Point(point.X + tx, point.Y + ty)))
                         Points.Add(new Point(point.X + tx, point.Y + ty));
-                        //SetPixel(x + tx, y + ty, c);
                 }
 
             }

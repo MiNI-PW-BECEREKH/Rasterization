@@ -147,20 +147,20 @@ namespace Rasterization.UI
                         CachedPoints.Add(pointWithInts);
 
                 }
-                if ((bool)ArcDrawingButton.IsChecked)
-                {
-                    CachedPoints.Add(pointWithInts);
+                //if ((bool)ArcDrawingButton.IsChecked)
+                //{
+                //    CachedPoints.Add(pointWithInts);
 
-                    if (CachedPoints.Count == 3)
-                    {
-                        Arc arc = new Arc(CachedPoints);
-                        CachedPoints.Clear();
-                        arc.CalculatePoints();
-                        Drawables.Add(arc);
-                        arc.Draw(GE);
+                //    if (CachedPoints.Count == 3)
+                //    {
+                //        Arc arc = new Arc(CachedPoints);
+                //        CachedPoints.Clear();
+                //        arc.CalculatePoints();
+                //        Drawables.Add(arc);
+                //        arc.Draw(GE);
 
-                    }
-                }
+                //    }
+                //}
                 if ((bool)GrabToolButton.IsChecked)
                 {
                     foreach (var drawable in Drawables)
@@ -200,7 +200,7 @@ namespace Rasterization.UI
             int height = 1200 / 2;
             int rawStride = (width * pf.BitsPerPixel + 7) / 8;
             byte[] rawImage = new byte[rawStride * height];
-            rawImage = Enumerable.Repeat((byte)240, rawImage.Length).ToArray();
+            rawImage = Enumerable.Repeat((byte)250, rawImage.Length).ToArray();
 
             BitmapSource bitmap = BitmapSource.Create(width, height,
                 96, 96, pf, null,
@@ -435,8 +435,8 @@ namespace Rasterization.UI
             foreach (var drawable in Drawables)
             {
                 drawable.Erase(GE);
-                drawable.DrawAA(GE);
-                drawable.IsAA = true;
+                drawable.CalculateAntiAliased(GE);
+                drawable.IsAntiAliased = true;
             }
         }
 
@@ -444,7 +444,7 @@ namespace Rasterization.UI
         {
             foreach (IDrawable drawable in Drawables)
             {
-                drawable.IsAA = false;
+                drawable.IsAntiAliased = false;
                 drawable.Erase(GE);
                 drawable.Draw(GE);
             }
@@ -542,7 +542,7 @@ namespace Rasterization.UI
 
         public struct Serializable
         {
-            public List<Point> Points;
+            public List<ColoredPoint> Points;
             public List<Point> BasePoints;
             public string Name;
         }

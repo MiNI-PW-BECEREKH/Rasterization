@@ -7,19 +7,17 @@ using System.Threading.Tasks;
 
 namespace Rasterization.Engine
 {
-    public class Circle : IDrawable
+    public class Circle : IDrawable, ICircle
     {
         public int Radius { get; set; }
         public Point Center {  get; set; }
         public Color Color { get ; set ; } = Color.Black;
+        public CircleBrush Brush { get ; set ; }
         public List<Point> StretchablePoints { get ; set ; }
-        public List<Point> Points { get; set; } = new();
-        public FilledCircle Brush { get ; set ; }
-        public List<Point> BrushPoints { get ; set ; }
+        public List<ColoredPoint> Points { get; set; } = new();
         public List<Point> BasePoints { get; set; } = new();
-        public bool IsAA { get ; set ; }
+        public bool IsAntiAliased { get ; set ; }
         public string Name { get; set; } = "Circle";
-        public List<Line> Lines { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public Circle()
         {
@@ -30,7 +28,7 @@ namespace Rasterization.Engine
             Center = center;
             Radius = (int)Math.Sqrt(Math.Pow(center.X - radiusIndicator.X, 2) + Math.Pow(center.Y - radiusIndicator.Y, 2));
             Color = color;
-            Brush = new FilledCircle(new Point(0, 0), new Point(bs, bs), Color);
+            Brush = new CircleBrush(new Point(0, 0), bs, Color);
             CalculateBrush();
         }
 
@@ -89,12 +87,12 @@ namespace Rasterization.Engine
             }
 
             CalculateBrush();
-            StretchablePoints = new List<Point>(Points);
+            StretchablePoints = new List<Point>(Points.Select(p => p.AsPoint()));
         }
 
         public void Draw(IGraphicsEngine engine)
         {
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAACircle(this);
             }
@@ -109,12 +107,12 @@ namespace Rasterization.Engine
 
         public bool HitTest(Point p)
         {
-            return Points.Contains(p);
+            return Points.Any(point => Math.Sqrt(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2)) < 10);
         }
 
         public void IndicateSelection(IGraphicsEngine engine)
         {
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAACircle(this);
             }
@@ -139,7 +137,7 @@ namespace Rasterization.Engine
         {
             Center = new Point(Center.X + dx, Center.Y + dy);
             CalculatePoints();
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAACircle(this);
             }
@@ -150,8 +148,8 @@ namespace Rasterization.Engine
         public void CalculateBrush()
         {
             Brush.CalculatePoints(BasePoints);
-            Points.AddRange(Brush.Points);
-            Points.AddRange(BasePoints);
+            Points.AddRange(Brush.Points.Select(p => p.AsColoredPoint(Color)));
+            Points.AddRange(BasePoints.Select(p => p.AsColoredPoint(Color)));
         }
 
         public void DrawAA(IGraphicsEngine engine)
@@ -166,12 +164,17 @@ namespace Rasterization.Engine
             Center = new Point(Center.X * 2, Center.Y * 2);
             Radius = 2 * Radius;
             CalculatePoints();
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAACircle(this);
             }
             else
                 Draw(engine);
+        }
+
+        public void CalculateAntiAliased(IGraphicsEngine engine)
+        {
+            throw new NotImplementedException();
         }
     }
 }

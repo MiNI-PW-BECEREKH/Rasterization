@@ -7,18 +7,19 @@ using System.Threading.Tasks;
 
 namespace Rasterization.Engine
 {
-    public class Polygon : IDrawable
+    public class Polygon : IDrawable, ILinePolygon
     {
         public Color Color { get; set; }
         public List<Point> StretchablePoints { get; set; }
-        public List<Point> Points { get; set; } = new();
+        public List<ColoredPoint> Points { get; set; } = new();
+        public List<Point> BasePoints { get; set; } = new();
 
         public List<Line> Lines { get; set; } = new();
-        public FilledCircle Brush { get; set; }
-        public List<Point> BrushPoints { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public List<Point> BasePoints { get; set; } = new();
-        public bool IsAA { get; set; }
+        public CircleBrush Brush { get; set; }
+        public bool IsAntiAliased { get; set; }
         public string Name { get; set; } = "Polygon";
+        public Point StartingPoint { get ; set ; }
+        public Point EndingPoint { get ; set ; }
 
         public Polygon()
         {
@@ -27,21 +28,24 @@ namespace Rasterization.Engine
 
         public Polygon(List<Point> stretchablePoints, Color c, int bs)
         {
+            StartingPoint = EndingPoint = stretchablePoints[0];
             StretchablePoints = new List<Point>(stretchablePoints);
             Color = c;
-            Brush = new FilledCircle(new Point(0, 0), new Point(bs, bs), Color);
+            Brush = new CircleBrush(new Point(0, 0), bs, Color);
 
             CalculateBrush();
-            //for(int i = 1; i < StretchablePoints.Count; i++)
-            //{
-            //    Lines.Add(new Line(StretchablePoints[i - 1], StretchablePoints[i], Color));
-            //}
+            for (int i = 1; i < StretchablePoints.Count; i++)
+            {
+                Lines.Add(new Line(StretchablePoints[i - 1], StretchablePoints[i], Color, bs));
+            }
 
 
         }
 
         public void CalculatePoints()
         {
+            Points.Clear();
+            BasePoints.Clear();
             Lines.Clear();
 
             for (int i = 0; i < StretchablePoints.Count; i++)
@@ -83,7 +87,7 @@ namespace Rasterization.Engine
 
         public bool HitTest(Point p)
         {
-            return Points.Contains(p);
+            return Points.Any(point => Math.Sqrt(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2)) < 10);
         }
 
         public void IndicateSelection(IGraphicsEngine engine)
@@ -96,10 +100,15 @@ namespace Rasterization.Engine
 
         public void Move(IGraphicsEngine engine, int dx, int dy, int idx)
         {
-            foreach (var line in Lines)
+            for(int i = 0; i < StretchablePoints.Count; i++)
             {
-                line.Move(engine, dx, dy, idx);
+                var point = StretchablePoints[i];
+                StretchablePoints.RemoveAt(i);
+                var movedPoint = new Point(point.X + dx, point.Y + dy);
+                StretchablePoints.Insert(i, movedPoint);
             }
+            CalculatePoints();
+            engine.Move(this);
         }
 
         public void Stretch(IGraphicsEngine engine, int dx, int dy, int idx)
@@ -123,11 +132,11 @@ namespace Rasterization.Engine
 
         public void CalculateBrush()
         {
-            foreach (var line in Lines)
+            Lines.ForEach(l =>
             {
-                line.Brush = Brush;
-                line.Brush.CalculatePoints();
-            }
+                l.Brush = Brush;
+                l.Brush.CalculatePoints(l.BasePoints);
+            });
         }
 
         public void DrawAA(IGraphicsEngine engine)
@@ -139,6 +148,11 @@ namespace Rasterization.Engine
         }
 
         public void UpScale(IGraphicsEngine engine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void CalculateAntiAliased(IGraphicsEngine engine)
         {
             throw new NotImplementedException();
         }

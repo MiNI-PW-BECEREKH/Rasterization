@@ -9,7 +9,7 @@ namespace Rasterization.Engine
     {
         public WriteableBitmap Bitmap { get; set; }
 
-        public Color BackGround { get; set; } = Color.FromArgb(240, 240, 240);
+        public Color BackGround { get; set; } = Color.FromArgb(250, 250, 250);
 
         public Color GrabbedItemColor { get; set; } = Color.FromArgb(0, 0, 0);
 
@@ -45,15 +45,14 @@ namespace Rasterization.Engine
             Bitmap.AddDirtyRect(new Int32Rect(x, y, 1, 1));
         }
 
-        #region lineprocedures
-        public void Draw(Line line)
+        public void Draw(IDrawable drawable)
         {
             Bitmap.Lock();
             try
             {
-                foreach (var point in line.Points)
+                foreach (var point in drawable.Points)
                 {
-                    SetPixel(point.X, point.Y, line.Color);
+                    SetPixel(point.X, point.Y, drawable.Color);
                     //line.Brush.Center = point;
                     //line.Brush.CalculatePoints();
                     //Draw(line.Brush);
@@ -67,7 +66,7 @@ namespace Rasterization.Engine
 
         }
 
-        public void Erase(Line line)
+        public void Erase(IDrawable line)
         {
             Bitmap.Lock();
             try
@@ -88,7 +87,7 @@ namespace Rasterization.Engine
 
 
 
-        public void Transparent(Line line)
+        public void Transparent(IDrawable line)
         {
             Erase(line);
             GrabbedItemColor = Color.FromArgb(128, line.Color.R, line.Color.G, line.Color.B);
@@ -109,8 +108,9 @@ namespace Rasterization.Engine
             }
         }
 
-        public void Stretch(Line line)
+        public void Stretch(IDrawable line)
         {
+            Erase(line);
             GrabbedItemColor = Color.FromArgb(128, line.Color.R, line.Color.G, line.Color.B);
             Bitmap.Lock();
             try
@@ -129,8 +129,9 @@ namespace Rasterization.Engine
             }
         }
 
-        public void Move(Line line)
+        public void Move(IDrawable line)
         {
+            Erase(line);
             GrabbedItemColor = Color.FromArgb(128, line.Color.R, line.Color.G, line.Color.B);
             Bitmap.Lock();
             try
@@ -150,229 +151,7 @@ namespace Rasterization.Engine
             }
         }
 
-        #endregion
-
-        #region circleprocedures
-        public void Draw(Circle circle)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, circle.Color);
-                    //circle.Brush.Center = point;
-                    //circle.Brush.CalculatePoints();
-                    //Draw(circle.Brush);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Erase(Circle circle)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, BackGround);
-                    //circle.Brush.Center = point;
-                    //circle.Brush.CalculatePoints();
-                    //Erase(circle.Brush);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Transparent(Circle circle)
-        {
-            Erase(circle);
-            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                    //circle.Brush.Center = point;
-                    //circle.Brush.CalculatePoints();
-                    //Transparent(circle.Brush);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Stretch(Circle circle)
-        {
-            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                    //circle.Brush.Center = point;
-                    //circle.Brush.CalculatePoints();
-                    //Stretch(circle.Brush);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Move(Circle circle)
-        {
-            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                    //circle.Brush.Center = point;
-                    //circle.Brush.CalculatePoints();
-                    //Move(circle.Brush);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-        #endregion
-
-        public void Draw(FilledCircle circle)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, circle.Color);
-
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Erase(FilledCircle circle)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, BackGround);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Transparent(FilledCircle circle)
-        {
-            Erase(circle);
-            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Stretch(FilledCircle circle)
-        {
-            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Move(FilledCircle circle)
-        {
-            GrabbedItemColor = Color.FromArgb(128, circle.Color.R, circle.Color.G, circle.Color.B);
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in circle.Points)
-                {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-
-
-        public void Draw(Arc arc)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in arc.Points)
-                {
-                    SetPixel(point.X, point.Y, arc.Color);
-
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
-
-        public void Draw(Polygon arc)
-        {
-            Bitmap.Lock();
-            try
-            {
-                foreach (var point in arc.Points)
-                {
-                    SetPixel(point.X, point.Y, arc.Color);
-
-                }
-            }
-            finally
-            {
-                Bitmap.Unlock();
-            }
-        }
+        
 
         int iPartOfNumber(float x)
         {

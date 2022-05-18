@@ -7,21 +7,20 @@ using System.Xml.Serialization;
 
 namespace Rasterization.Engine
 {
-    public class Line : IDrawable
+    public class Line : IDrawable, ILine
     {
         public Point StartingPoint { get; set; }
         public Point EndingPoint { get; set; }
 
-        public List<Point> Points { get; set; } = new();
         public Color Color { get ; set; } = Color.Black;
-        public List<Point> StretchablePoints { get; set; } = new();
         [XmlIgnore]
-        public FilledCircle Brush { get ; set ; }
-        public List<Point> BrushPoints { get ; set ; }
-        public List<Point> BasePoints { get; set; } = new List<Point>();
-        public bool IsAA { get ; set ; }
+        public CircleBrush Brush { get ; set ; }
+        public List<ColoredPoint> Points { get; set; } = new();
+        public List<Point> StretchablePoints { get; set; } = new();
+        public List<Point> BasePoints { get; set; } = new ();
+        public bool IsAntiAliased { get ; set ; } = false;
         public string Name { get; set; } = "Line";
-        public List<Line> Lines { get; set ; }
+        public Color GrabbedCollor { get; set ; }
 
         public Line()
         {
@@ -32,12 +31,13 @@ namespace Rasterization.Engine
             StartingPoint = sp;
             EndingPoint = ep;
             Color = color;
-            Brush = new FilledCircle(new Point(0,0),new Point(bs,bs),Color);
+            GrabbedCollor = Color.FromArgb(128, Color.R, Color.G, Color.B);
+            Brush = new CircleBrush(new Point(0,0),bs,Color);
 
             CalculateBrush();
 
-            StretchablePoints.Add(sp);
-            StretchablePoints.Add(ep);
+            StretchablePoints.Add(new Point(sp.X,sp.Y));
+            StretchablePoints.Add(new Point(ep.X, ep.Y));
 
         }
 
@@ -132,7 +132,7 @@ namespace Rasterization.Engine
 
         public void Draw(IGraphicsEngine engine)
         {
-            if(IsAA)
+            if(IsAntiAliased)
             {
                 engine.DrawAALine(this);
             }
@@ -152,7 +152,7 @@ namespace Rasterization.Engine
 
         public void IndicateSelection(IGraphicsEngine engine)
         {
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAALine(this);
             }
@@ -164,9 +164,9 @@ namespace Rasterization.Engine
         {
             var p = StretchablePoints[idx];
             StretchablePoints.Remove(p);
-            StretchablePoints.Insert(idx,new Point(p.X + dx , p.Y + dy ));
+            StretchablePoints.Insert(idx,new Point(p.X + dx , p.Y + dy));
             CalculatePoints();
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAALine(this);
             }
@@ -183,7 +183,7 @@ namespace Rasterization.Engine
             StretchablePoints.RemoveAt(1);
             StretchablePoints.Insert(1, new Point(p.X + dx,  p.Y + dy ));
             CalculatePoints();
-            if (IsAA)
+            if (IsAntiAliased)
             {
                 engine.DrawAALine(this);
             }
@@ -194,8 +194,8 @@ namespace Rasterization.Engine
         public void CalculateBrush()
         {
             Brush.CalculatePoints(BasePoints);
-            Points.AddRange(Brush.Points);
-            Points.AddRange(BasePoints);
+            Points.AddRange(Brush.Points.Select(p => p.AsColoredPoint(Color)));
+            //Points.AddRange(BasePoints.Select(p => p.AsColoredPoint(Color)));
         }
 
         public void DrawAA(IGraphicsEngine engine)
@@ -215,6 +215,11 @@ namespace Rasterization.Engine
 
 
 
+        }
+
+        public void CalculateAntiAliased(IGraphicsEngine engine)
+        {
+            throw new NotImplementedException();
         }
     }
 }
