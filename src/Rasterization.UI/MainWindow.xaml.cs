@@ -30,7 +30,7 @@ namespace Rasterization.UI
         IGraphicsEngine GE;
         List<IDrawable> Drawables = new List<IDrawable>();
         Color tempColor = Color.FromArgb(0, 0, 0);
-
+        Color oldc = Color.FromArgb(250, 250, 250, 250);
         Point MousePointRegister;
 
         IDrawable SelectedDrawable;
@@ -48,6 +48,8 @@ namespace Rasterization.UI
             CircleDrawingButton.IsChecked = false;
             PolygonDrawingButton.IsChecked = false;
             ArcDrawingButton.IsChecked = false;
+            PolyFill.IsChecked = false;
+            RectangleDrawingButton.IsChecked = false;
             //WuLineDrawingButton.IsChecked = false;
             //WuCircleDrawingButton.IsChecked = false;
             try
@@ -117,6 +119,19 @@ namespace Rasterization.UI
                         circle.Draw(GE);
 
                     }
+                }
+                if((bool)PolyFill.IsChecked)
+                {
+                    CachedPoints.Add(pointWithInts);
+
+                    if (CachedPoints.Count == 1)
+                    {
+                       GE.Bitmap.boundaryFill4(CachedPoints[0].X,CachedPoints[0].Y, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), ((System.Windows.Media.Color)ColorPicker2.SelectedColor).ToColor(), (bool)eightcon.IsChecked);
+                        CachedPoints.Clear();
+                        PolyFill.IsChecked = false;
+                        
+                    }
+
                 }
                 //if ((bool)WuCircleDrawingButton.IsChecked)
                 //{
@@ -599,9 +614,12 @@ namespace Rasterization.UI
             if(SelectedDrawable != null)
             if(SelectedDrawable.Name == "Polygon")
             {
+                    SelectedDrawable.IsFilledImage = false;
                 SelectedDrawable.IsFilled = true;
                 ((ILinePolygon)SelectedDrawable).FillPolygon(GE, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor());
-            }
+                    SelectedDrawable.Draw(GE);
+
+                }
         }
 
         private void FillImage_Click(object sender, RoutedEventArgs e)
@@ -616,9 +634,11 @@ namespace Rasterization.UI
                 {
                     BitmapImage bitmap = new BitmapImage(new Uri(fileDialog.FileName));
                     WriteableBitmap writeable = new WriteableBitmap(bitmap);
+                    SelectedDrawable.IsFilled = false;
                     SelectedDrawable.IsFilledImage = true;
                     SelectedDrawable.FillBitmap = writeable;
                     ((ILinePolygon)SelectedDrawable).FillImage(GE, writeable);
+                    SelectedDrawable.Draw(GE);
                 }
             }
         }

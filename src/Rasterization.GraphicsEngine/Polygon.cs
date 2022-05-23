@@ -134,6 +134,8 @@ namespace Rasterization.Engine
         {
             foreach (var line in Lines)
             {
+                line.Color = Color;
+                line.Brush.Color = Color;
                 line.IndicateSelection(engine);
             }
         }

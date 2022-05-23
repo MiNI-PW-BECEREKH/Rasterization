@@ -60,13 +60,19 @@
                     <xctk:IntegerUpDown Height="30" Value="1" Minimum="0" Increment="1" Name="BrushInput" ValueChanged="BrushInput_ValueChanged"/>
 
                     <ToggleButton Height="30" Name="GrabToolButton" Click="ToolSetClick" Content="GRAB"/>
-                    
+
+                    <ToggleButton Height="30" Name="PolyFill" Click="ToolSetClick" Content="FLOOD FILL"/>
+
                     <xctk:ColorPicker  Height="30" SelectedColor="Black" Name="ColorPicker" SelectedColorChanged="ColorPicker_SelectedColorChanged" />
+
+                    <xctk:ColorPicker  Height="30" SelectedColor="Red" Name="ColorPicker2"  />
 
 
                     <Button Height="30" Name="SuperSample" Click="SuperSample_Click">SUPER SAMPLE</Button>
 
                     <CheckBox  Name="AntiAliasing" Checked="AntiAliasing_Checked" Unchecked="AntiAliasing_Unchecked" Content="WU ALL" VerticalAlignment="Center"></CheckBox>
+
+                    <CheckBox  Name="eightcon"  Content="8-connection" VerticalAlignment="Center"></CheckBox>
 
                     <Button Height="30" Name="Clip" Click="Clip_Click">CLIP</Button>
 
