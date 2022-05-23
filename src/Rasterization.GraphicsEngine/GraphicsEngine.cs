@@ -18,7 +18,7 @@ namespace Rasterization.Engine
             Bitmap = writeableBitmap;
         }
 
-        void SetPixel(int x, int y, Color color)
+        public void SetPixel(int x, int y, Color color)
         {
             if (y > Bitmap.PixelHeight - 1 || x > Bitmap.PixelWidth - 1)
                 return;
@@ -52,7 +52,7 @@ namespace Rasterization.Engine
             {
                 foreach (var point in drawable.Points)
                 {
-                    SetPixel(point.X, point.Y, drawable.Color);
+                    SetPixel(point.X, point.Y, point.Color);
                     //line.Brush.Center = point;
                     //line.Brush.CalculatePoints();
                     //Draw(line.Brush);
@@ -138,7 +138,7 @@ namespace Rasterization.Engine
             {
                 foreach (var point in line.Points)
                 {
-                    SetPixel(point.X, point.Y, GrabbedItemColor);
+                    SetPixel(point.X, point.Y, point.Color);
                     //line.Brush.Center = point;
                     ////TODO: fix brush
                     //line.Brush.CalculatePoints();
@@ -362,6 +362,17 @@ namespace Rasterization.Engine
             {
                 Bitmap.Unlock();
             }
+        }
+
+        public void FillLine(int y, int x1, int x2, Color c)
+        {
+            Bitmap.Lock();
+            for(int x = x1; x <= x2; x++)
+            {
+                SetPixel(x, y, c);
+            }
+
+            Bitmap.Unlock();
         }
 
     }

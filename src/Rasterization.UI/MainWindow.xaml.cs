@@ -15,6 +15,7 @@ using Rasterization.UI.ConversionExtension;
 using Microsoft.Win32;
 using System.IO;
 using System.Xml.Serialization;
+using Rectangle = Rasterization.Engine.Rectangle;
 
 namespace Rasterization.UI
 {
@@ -82,7 +83,7 @@ namespace Rasterization.UI
 
                     if (CachedPoints.Count == 2)
                     {
-                        Line line = new Line(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
+                        Line line = new Line(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value -1);
                         CachedPoints.Clear();
                         line.CalculatePoints();
                         Drawables.Add(line);
@@ -109,7 +110,7 @@ namespace Rasterization.UI
 
                     if (CachedPoints.Count == 2)
                     {
-                        Circle circle = new Circle(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
+                        Circle circle = new Circle(CachedPoints[0], CachedPoints[1], ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value -1);
                         CachedPoints.Clear();
                         circle.CalculatePoints();
                         Drawables.Add(circle);
@@ -137,7 +138,7 @@ namespace Rasterization.UI
                     if (((int)Math.Sqrt(Math.Pow(initialPoint.X - pointWithInts.X, 2) + Math.Pow(initialPoint.Y - pointWithInts.Y, 2)) < 50))
                     {
                         //CachedPoints.Add(CachedPoints.First());
-                        Polygon polygon = new Polygon(CachedPoints, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value);
+                        Polygon polygon = new Polygon(CachedPoints, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor(), (int)BrushInput.Value -1);
                         polygon.CalculatePoints();
                         Drawables.Add(polygon);
                         polygon.Draw(GE);
@@ -147,20 +148,20 @@ namespace Rasterization.UI
                         CachedPoints.Add(pointWithInts);
 
                 }
-                //if ((bool)ArcDrawingButton.IsChecked)
-                //{
-                //    CachedPoints.Add(pointWithInts);
+                if ((bool)RectangleDrawingButton.IsChecked)
+                {
+                    CachedPoints.Add(pointWithInts);
 
-                //    if (CachedPoints.Count == 3)
-                //    {
-                //        Arc arc = new Arc(CachedPoints);
-                //        CachedPoints.Clear();
-                //        arc.CalculatePoints();
-                //        Drawables.Add(arc);
-                //        arc.Draw(GE);
+                    if (CachedPoints.Count == 2)
+                    {
+                        Rectangle rec = new Rectangle(CachedPoints[0], CachedPoints[1]);
+                        CachedPoints.Clear();
+                        rec.CalculatePoints();
+                        Drawables.Add(rec);
+                        rec.Draw(GE);
 
-                //    }
-                //}
+                    }
+                }
                 if ((bool)GrabToolButton.IsChecked)
                 {
                     foreach (var drawable in Drawables)
@@ -573,6 +574,52 @@ namespace Rasterization.UI
                     }
                 }
 
+            }
+        }
+
+        private void Clip_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedDrawable == null)
+                return;
+            foreach(var item in Drawables)
+            {
+                if (item == SelectedDrawable)
+                    continue;
+                if (item.Name != "Polygon" && item.Name != "Line")
+                    continue;
+
+                if(SelectedDrawable.Name == "Polygon")
+                    item.Clip(GE,SelectedDrawable);
+
+            }
+        }
+
+        private void Fill_Click(object sender, RoutedEventArgs e)
+        {
+            if(SelectedDrawable != null)
+            if(SelectedDrawable.Name == "Polygon")
+            {
+                SelectedDrawable.IsFilled = true;
+                ((ILinePolygon)SelectedDrawable).FillPolygon(GE, ((System.Windows.Media.Color)ColorPicker.SelectedColor).ToColor());
+            }
+        }
+
+        private void FillImage_Click(object sender, RoutedEventArgs e)
+        {
+            if(SelectedDrawable != null && SelectedDrawable.Name == "Polygon")
+            {
+                OpenFileDialog fileDialog = new OpenFileDialog();
+                fileDialog.Filter = "Image files (*.jpg)|*.jpg|All Files (*.*)|*.*";
+                fileDialog.RestoreDirectory = true;
+
+                if (fileDialog.ShowDialog() == true)
+                {
+                    BitmapImage bitmap = new BitmapImage(new Uri(fileDialog.FileName));
+                    WriteableBitmap writeable = new WriteableBitmap(bitmap);
+                    SelectedDrawable.IsFilledImage = true;
+                    SelectedDrawable.FillBitmap = writeable;
+                    ((ILinePolygon)SelectedDrawable).FillImage(GE, writeable);
+                }
             }
         }
     }

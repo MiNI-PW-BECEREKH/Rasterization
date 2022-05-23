@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace Rasterization.Engine
 {
@@ -18,6 +19,11 @@ namespace Rasterization.Engine
         public List<Point> BasePoints { get; set; } = new();
         public bool IsAntiAliased { get ; set ; }
         public string Name { get; set; } = "Circle";
+        public Point NormalToOutside { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool IsFilled { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Color fillColor { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public bool IsFilledImage { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public WriteableBitmap FillBitmap { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public Circle()
         {
@@ -29,6 +35,7 @@ namespace Rasterization.Engine
             Radius = (int)Math.Sqrt(Math.Pow(center.X - radiusIndicator.X, 2) + Math.Pow(center.Y - radiusIndicator.Y, 2));
             Color = color;
             Brush = new CircleBrush(new Point(0, 0), bs, Color);
+            if(Brush.Radius > 0)
             CalculateBrush();
         }
 
@@ -172,7 +179,108 @@ namespace Rasterization.Engine
                 Draw(engine);
         }
 
+        Color CircleC2(Color B, Color L, float T)
+        {
+            var r = L.R * (1 - T) + B.R * T;
+            var g = L.G * (1 - T) + B.G * T;
+            var b = L.B * (1 - T) + B.B * T;
+
+            return Color.FromArgb(255, (int)r, (int)g, (int)b);
+        }
+
+        Color CircleC1(Color B, Color L, float T)
+        {
+            var r = B.R * (1 - T) + L.R * T;
+            var g = B.G * (1 - T) + L.G * T;
+            var b = B.B * (1 - T) + L.B * T;
+
+            return Color.FromArgb(255, (int)r, (int)g, (int)b);
+        }
+
+
         public void CalculateAntiAliased(IGraphicsEngine engine)
+        {
+                Points.Clear();
+                //Erase(circle)
+                //Draw(circle);
+                Color L = this.Color;
+                Color B = Color.FromArgb(250, 250, 250); 
+                var Center = this.Center;
+                int r = this.Radius;
+                int x = this.Radius;
+                int y = 0;
+                //SetPixel(x, y, L);
+
+                //SetPixel(Center.X + x, Center.Y + y, L);
+                //SetPixel(Center.X + x - 1, Center.Y + y, L);
+
+                //SetPixel(Center.X + y, Center.Y + x, L);
+                //SetPixel(Center.X + y - 1, Center.Y + x, L);
+
+                //SetPixel(Center.X - y, Center.Y + x, L);
+                //SetPixel(Center.X - y + 1, Center.Y + x, L);
+
+                //SetPixel(Center.X - x, Center.Y + y, L);
+                //SetPixel(Center.X - x + 1, Center.Y + y, L);
+
+                //SetPixel(Center.X - x, Center.Y - y, L);
+                //SetPixel(Center.X - x + 1, Center.Y - y, L);
+
+                //SetPixel(Center.X - y, Center.Y - x, L);
+                //SetPixel(Center.X - y + 1, Center.Y - x, L);
+
+                //SetPixel(Center.X + y, Center.Y - x, L);
+                //SetPixel(Center.X + y - 1, Center.Y - x, L);
+
+                //SetPixel(Center.X + x, Center.Y - y, L);
+                //SetPixel(Center.X + x - 1, Center.Y - y, L);
+
+                while (x > y)
+                {
+                    ++y;
+                    x = (int)(Math.Ceiling(Math.Sqrt((r * r) - (y * y))));
+
+                    float T = (float)(Math.Ceiling(Math.Sqrt(r * r - y * y)) - Math.Sqrt(r * r - y * y));
+
+                    var c2 = CircleC2(B, L, T);
+                    var c1 = CircleC1(B, L, T);
+
+                    if (y > x)
+                        break;
+
+
+                    Points.Add(new ColoredPoint(Center.X + x, Center.Y + y, c2)); //7
+                    Points.Add(new ColoredPoint(Center.X + x - Brush.Radius - 1, Center.Y + y, c1));
+
+                    Points.Add(new ColoredPoint(Center.X + y, Center.Y + x, c2)); //8
+                    Points.Add(new ColoredPoint(Center.X + y, Center.Y + x - Brush.Radius - 1, c1));
+
+                    Points.Add(new ColoredPoint(Center.X - y, Center.Y + x, c2)); //5
+                    Points.Add(new ColoredPoint(Center.X - y, Center.Y + x - Brush.Radius - 1, c1));
+
+                    Points.Add(new ColoredPoint(Center.X - x, Center.Y + y, c2)); //6
+                    Points.Add(new ColoredPoint(Center.X - x + Brush.Radius + 1, Center.Y + y, c1));
+
+                    Points.Add(new ColoredPoint(Center.X - x, Center.Y - y, c2)); //3
+                    Points.Add(new ColoredPoint(Center.X - x + Brush.Radius + 1, Center.Y - y, c1));
+
+                    Points.Add(new ColoredPoint(Center.X - y, Center.Y - x, c2)); //4
+                    Points.Add(new ColoredPoint(Center.X - y, Center.Y - x + Brush.Radius + 1, c1));
+
+                    Points.Add(new ColoredPoint(Center.X + y, Center.Y - x, c2)); //1
+                    Points.Add(new ColoredPoint(Center.X + y, Center.Y - x + Brush.Radius + 1, c1));
+
+                    Points.Add(new ColoredPoint(Center.X + x, Center.Y - y, c2)); //2
+                    Points.Add(new ColoredPoint(Center.X + x - Brush.Radius - 1, Center.Y - y, c1));
+
+
+                }
+            
+                engine.Draw(this);
+
+        }
+
+        public void Clip(IGraphicsEngine engine, IDrawable se)
         {
             throw new NotImplementedException();
         }

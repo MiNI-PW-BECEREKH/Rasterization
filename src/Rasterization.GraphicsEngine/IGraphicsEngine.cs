@@ -12,6 +12,10 @@ namespace Rasterization.Engine
         void Stretch(IDrawable line);
         void Move(IDrawable line);
 
+        void FillLine(int y, int x1, int x2, Color c);
+
+        void SetPixel(int x, int y, Color color);
+
         //void Draw(Circle circle);
         //void Erase(Circle circle);
         //void Transparent(Circle circle);

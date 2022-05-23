@@ -55,6 +55,7 @@
                     <ToggleButton Height="30" Name="PolygonDrawingButton" Click="ToolSetClick" Unchecked="ToolSetUnClick" Content="POLYGON"/>
 
                     <ToggleButton Height="30" Name="ArcDrawingButton" Click="ToolSetClick" Unchecked="ToolSetUnClick" Content="ARC"/>
+                    <ToggleButton Height="30" Name="RectangleDrawingButton" Click="ToolSetClick" Unchecked="ToolSetUnClick" Content="RECTANGLE"/>
 
                     <xctk:IntegerUpDown Height="30" Value="1" Minimum="0" Increment="1" Name="BrushInput" ValueChanged="BrushInput_ValueChanged"/>
 
@@ -66,7 +67,13 @@
                     <Button Height="30" Name="SuperSample" Click="SuperSample_Click">SUPER SAMPLE</Button>
 
                     <CheckBox  Name="AntiAliasing" Checked="AntiAliasing_Checked" Unchecked="AntiAliasing_Unchecked" Content="WU ALL" VerticalAlignment="Center"></CheckBox>
- 
+
+                    <Button Height="30" Name="Clip" Click="Clip_Click">CLIP</Button>
+
+                    <Button Height="30" Name="Fill" Click="Fill_Click">FILL</Button>
+
+                    <Button Height="30" Name="FillImage" Click="FillImage_Click">FILL IMAGE</Button>
+
                     <Button Height="30" Name="DeleteButton" Click="DeleteButton_Click">DELETE</Button>
 
                 </StackPanel>
